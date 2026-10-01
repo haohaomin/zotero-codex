@@ -73,7 +73,11 @@ var ZoteroMCPPreferences = {
       if (this.el('runtime-status').textContent !== state.message) this.el('runtime-status').textContent = state.message;
       this.el('auto-install').checked = state.automatic;
       this.el('prefer-system').checked = state.preferSystem;
-      this.el('node-source').textContent = state.nodeLabel || '正在检查可用的 Node.js…';
+      const busy = ['checking','downloading','verifying','installing'].includes(state.phase);
+      this.el('node-source').textContent = state.nodeLabel || (busy ? '正在准备运行环境…' : '运行环境将在准备组件后显示');
+      const badge = this.el('runtime-badge');
+      badge.textContent = state.phase === 'error' ? '需要处理' : busy ? '准备中' : state.ready ? (state.configured ? 'Codex 已配置' : '组件已就绪') : '待准备';
+      badge.dataset.tone = state.phase === 'error' ? 'error' : state.ready && !busy ? 'ready' : 'idle';
       this.el('runtime-label').textContent = state.nodeLabel || '尚未就绪';
       this.el('runtime-version').textContent = state.ready ? this.api.state().version : '尚未就绪';
       const paths = this.api.state();

@@ -15,6 +15,20 @@
     const ui = win.Zotero_Preferences.getScope(id).ZoteroMCPPreferences;
     check('pane-loads-with-status-and-defaults', el('bridge').textContent==='已就绪' && el('auto-text').checked && el('auto-region').checked);
     check('advanced-paths-hidden-until-requested', !el('connection-details').open && !el('developer-mode').checked && el('developer-fields').hidden);
+    check('advanced-section-collapsed-by-default', !el('advanced').open);
+    check('idle-runtime-is-not-shown-as-checking', el('runtime-badge').textContent==='待准备' && !el('node-source').textContent.includes('正在'));
+    const runtimeState=settings.runtime.state;
+    try {
+      for(const [phase,ready,configured,label,tone] of [
+        ['downloading',false,false,'准备中','idle'],
+        ['ready',true,false,'组件已就绪','ready'],
+        ['ready',true,true,'Codex 已配置','ready'],
+        ['error',false,false,'需要处理','error'],
+      ]) {
+        settings.runtime.state=()=>({...runtimeState(),phase,ready,configured});ui.refreshRuntime();
+        check('runtime-badge-'+phase+'-'+configured,el('runtime-badge').textContent===label&&el('runtime-badge').dataset.tone===tone);
+      }
+    } finally {settings.runtime.state=runtimeState;ui.refreshRuntime();}
     const toggle = (suffix, value) => { el(suffix).checked=value; el(suffix).dispatchEvent(new win.Event('change',{bubbles:true})); };
     toggle('auto-text',false);toggle('auto-region',false);
     check('ui-toggles-write-persistent-preferences', !settings.state().autoText && !settings.state().autoRegion && Zotero.Prefs.get('extensions.zotero-codex.autoRegion',true)===false);
@@ -78,9 +92,15 @@
     result.layout={width:rect.width,height:rect.height,scrollWidth:el('settings').scrollWidth,windowWidth:win.innerWidth,windowHeight:win.innerHeight};
     // Render both parts of the isolated preferences pane for visual verification.
     try {
-      for (const [name,scrollTop] of [['preferences',0],['preferences-bottom',2000],['preferences-developer',2000]]) {
-        if(name==='preferences-developer'){el('connection-details').open=true;toggle('developer-mode',true);}
-        win.Zotero_Preferences.content.scrollTop=scrollTop;
+      for (const [name,target] of [['preferences',null],['preferences-reading','reading-title'],['preferences-bottom','client-title'],['preferences-developer','advanced'],['preferences-narrow',null]]) {
+        if(name==='preferences-developer'){el('advanced').open=true;el('connection-details').open=true;toggle('developer-mode',true);}
+        if(name==='preferences-narrow'){
+          el('settings').style.width='360px';
+          ui.feedback('较长的状态提示应该在刷新按钮右边自动换行，不会超出设置页。');
+          check('narrow-layout-does-not-overflow', el('settings').scrollWidth<=362);
+        }
+        if(target) el(target).scrollIntoView({block:'start'});
+        else win.Zotero_Preferences.content.scrollTop=0;
         await Zotero.Promise.delay(100);
         const bitmap=await win.browsingContext.currentWindowGlobal.drawSnapshot(new win.DOMRect(0,0,win.innerWidth,win.innerHeight),1,'white');
         const canvas=win.document.createElementNS('http://www.w3.org/1999/xhtml','canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;
@@ -88,6 +108,7 @@
         const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
         await IOUtils.write(PathUtils.join(base,name+'.png'),new Uint8Array(await blob.arrayBuffer()));
       }
+      el('settings').style.width='';
       win.Zotero_Preferences.content.scrollTop=0;
       result.screenshot=true;
     } catch { result.screenshot=false; }
