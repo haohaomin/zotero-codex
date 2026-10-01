@@ -241,7 +241,7 @@ var ZoteroMCPRuntime = (() => {
     version=options.version;connection=options.connection;disposed=false;
     root=PathUtils.join(Services.dirsvc.get('ProfD',Components.interfaces.nsIFile).path,'zotero-codex-runtime');
     if(state().automatic) void ensure().catch(()=>{});
-    else notify({phase:'idle',message:'自动准备已关闭，点击「准备 / 重试」可安装运行组件。'});
+    else notify({phase:'idle',message:'自动准备已关闭，点击「准备组件」可安装运行组件。'});
   }
   function setAutomatic(value) {
     Zotero.Prefs.set(pref+'autoInstall',Boolean(value),true);

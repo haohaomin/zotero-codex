@@ -17,6 +17,8 @@
     check('advanced-paths-hidden-until-requested', !el('connection-details').open && !el('developer-mode').checked && el('developer-fields').hidden);
     check('advanced-section-collapsed-by-default', !el('advanced').open);
     check('idle-runtime-is-not-shown-as-checking', el('runtime-badge').textContent==='待准备' && !el('node-source').textContent.includes('正在'));
+    check('prepare-precedes-connect', el('install').nextElementSibling===el('connect'));
+    check('idle-prompts-preparation-and-blocks-connection', el('install').textContent==='准备组件' && !el('install').disabled && el('install').classList.contains('zc-primary') && el('connect').disabled);
     const runtimeState=settings.runtime.state;
     try {
       for(const [phase,ready,configured,label,tone] of [
@@ -27,8 +29,30 @@
       ]) {
         settings.runtime.state=()=>({...runtimeState(),phase,ready,configured});ui.refreshRuntime();
         check('runtime-badge-'+phase+'-'+configured,el('runtime-badge').textContent===label&&el('runtime-badge').dataset.tone===tone);
+        check('runtime-actions-'+phase+'-'+configured,
+          el('install').textContent===(phase==='downloading'?'准备中…':phase==='error'?'重试':'重新检查组件') &&
+          el('install').disabled===(phase==='downloading') && el('connect').disabled===(phase!=='ready') &&
+          el('connect').classList.contains('zc-primary')===(phase==='ready'));
       }
     } finally {settings.runtime.state=runtimeState;ui.refreshRuntime();}
+    const originalConnect=settings.runtime.connect, originalEnsure=settings.runtime.ensure;
+    let release, calls=0;
+    try {
+      settings.runtime.state=()=>({...runtimeState(),phase:'ready',ready:true,configured:false});
+      settings.runtime.connect=()=>{calls++;return new Promise(resolve=>{release=resolve;});};
+      ui.refreshRuntime();el('connect').click();ui.refreshRuntime();el('connect').click();
+      check('refresh-keeps-both-actions-locked-during-connect',calls===1 && el('connect').disabled && el('install').disabled && el('connect').textContent==='连接中…');
+      release();await waitFor(()=>!ui.pendingActions.has('connect'));
+      check('connect-completion-restores-actions',!el('connect').disabled&&!el('install').disabled);
+      let failed=false;
+      settings.runtime.state=()=>({...runtimeState(),phase:failed?'error':'idle',ready:false});
+      settings.runtime.ensure=async()=>{failed=true;throw new Error('准备失败测试');};
+      ui.refreshRuntime();el('install').click();await waitFor(()=>!ui.pendingActions.has('install'));
+      check('failed-preparation-finally-keeps-connect-disabled',el('connect').disabled&&!el('install').disabled&&el('install').textContent==='重试');
+    } finally {
+      settings.runtime.connect=originalConnect;settings.runtime.ensure=originalEnsure;settings.runtime.state=runtimeState;
+      ui.refreshRuntime();
+    }
     const toggle = (suffix, value) => { el(suffix).checked=value; el(suffix).dispatchEvent(new win.Event('change',{bubbles:true})); };
     toggle('auto-text',false);toggle('auto-region',false);
     check('ui-toggles-write-persistent-preferences', !settings.state().autoText && !settings.state().autoRegion && Zotero.Prefs.get('extensions.zotero-codex.autoRegion',true)===false);

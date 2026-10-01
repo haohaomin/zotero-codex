@@ -8,10 +8,10 @@
     <html:p id="zc-runtime-status" role="status" aria-live="polite">正在检查运行组件…</html:p>
     <html:p id="zc-node-source" class="zc-muted"/>
     <html:div class="zc-actions">
-      <html:button id="zc-connect" class="zc-primary" type="button">连接 Codex</html:button>
-      <html:button id="zc-install" type="button">准备 / 重试</html:button>
+      <html:button id="zc-install" class="zc-primary" type="button">准备组件</html:button>
+      <html:button id="zc-connect" type="button" disabled="disabled" aria-describedby="zc-connection-hint">连接 Codex</html:button>
     </html:div>
-    <html:p class="zc-hint">首次连接后重启 Codex，使用时保持 Zotero 打开。</html:p>
+    <html:p id="zc-connection-hint" class="zc-hint">先准备运行组件，再连接 Codex。连接后重启 Codex。</html:p>
     <html:details class="zc-disclosure">
       <html:summary>运行环境与自动更新</html:summary>
       <html:label class="zc-option"><html:span><html:strong>优先复用本机 Node.js</html:strong><html:small>检测通过后仅下载服务组件，不可用时使用专用环境。</html:small></html:span><html:input id="zc-prefer-system" type="checkbox"/></html:label>

@@ -24,7 +24,19 @@
       "pass": true
     },
     {
+      "name": "prepare-precedes-connect",
+      "pass": true
+    },
+    {
+      "name": "idle-prompts-preparation-and-blocks-connection",
+      "pass": true
+    },
+    {
       "name": "runtime-badge-downloading-false",
+      "pass": true
+    },
+    {
+      "name": "runtime-actions-downloading-false",
       "pass": true
     },
     {
@@ -32,11 +44,35 @@
       "pass": true
     },
     {
+      "name": "runtime-actions-ready-false",
+      "pass": true
+    },
+    {
       "name": "runtime-badge-ready-true",
       "pass": true
     },
     {
+      "name": "runtime-actions-ready-true",
+      "pass": true
+    },
+    {
       "name": "runtime-badge-error-false",
+      "pass": true
+    },
+    {
+      "name": "runtime-actions-error-false",
+      "pass": true
+    },
+    {
+      "name": "refresh-keeps-both-actions-locked-during-connect",
+      "pass": true
+    },
+    {
+      "name": "connect-completion-restores-actions",
+      "pass": true
+    },
+    {
+      "name": "failed-preparation-finally-keeps-connect-disabled",
       "pass": true
     },
     {
