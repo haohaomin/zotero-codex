@@ -1,6 +1,6 @@
 // Packaged only into an isolated test profile by prepare-host-smoke.py.
 (async () => {
-  const result = {version:'0.8.1', stage:'preferences', checks:[]};
+  const result = {version:'0.8.2', stage:'preferences', checks:[]};
   const check = (name, pass) => { result.checks.push({name,pass:Boolean(pass)}); if (!pass) throw new Error(name); };
   const waitFor = async fn => { for (let i=0;i<150;i++) { if (await fn()) return; await Zotero.Promise.delay(100); } throw new Error('wait timed out'); };
   try {
@@ -10,11 +10,49 @@
     const id = 'zotero-codex-preferences';
     check('registered-native-preference-pane', Zotero.PreferencePanes.pluginPanes.some(p=>p.id===id && p.rawLabel==='Zotero MCP'));
     const win = Zotero.Utilities.Internal.openPreferences(id);
-    await waitFor(()=>win.document.getElementById('zc-version')?.textContent.includes('0.8.1'));
+    await waitFor(()=>win.document.getElementById('zc-version')?.textContent.includes('0.8.2'));
     const el = suffix=>win.document.getElementById('zc-'+suffix);
     const ui = win.Zotero_Preferences.getScope(id).ZoteroMCPPreferences;
     check('pane-loads-with-status-and-defaults', el('bridge').textContent==='已就绪' && el('auto-text').checked && el('auto-region').checked);
     check('advanced-paths-hidden-until-requested', !el('connection-details').open && !el('developer-mode').checked && el('developer-fields').hidden);
+    check('advanced-section-collapsed-by-default', !el('advanced').open);
+    check('idle-runtime-is-not-shown-as-checking', el('runtime-badge').textContent==='待准备' && !el('node-source').textContent.includes('正在'));
+    check('prepare-precedes-connect', el('install').nextElementSibling===el('connect'));
+    check('idle-prompts-preparation-and-blocks-connection', el('install').textContent==='准备组件' && !el('install').disabled && el('install').classList.contains('zc-primary') && el('connect').disabled);
+    const runtimeState=settings.runtime.state;
+    try {
+      for(const [phase,ready,configured,label,tone] of [
+        ['downloading',false,false,'准备中','idle'],
+        ['ready',true,false,'组件已就绪','ready'],
+        ['ready',true,true,'Codex 已配置','ready'],
+        ['error',false,false,'需要处理','error'],
+      ]) {
+        settings.runtime.state=()=>({...runtimeState(),phase,ready,configured});ui.refreshRuntime();
+        check('runtime-badge-'+phase+'-'+configured,el('runtime-badge').textContent===label&&el('runtime-badge').dataset.tone===tone);
+        check('runtime-actions-'+phase+'-'+configured,
+          el('install').textContent===(phase==='downloading'?'准备中…':phase==='error'?'重试':'重新检查组件') &&
+          el('install').disabled===(phase==='downloading') && el('connect').disabled===(phase!=='ready') &&
+          el('connect').classList.contains('zc-primary')===(phase==='ready'));
+      }
+    } finally {settings.runtime.state=runtimeState;ui.refreshRuntime();}
+    const originalConnect=settings.runtime.connect, originalEnsure=settings.runtime.ensure;
+    let release, calls=0;
+    try {
+      settings.runtime.state=()=>({...runtimeState(),phase:'ready',ready:true,configured:false});
+      settings.runtime.connect=()=>{calls++;return new Promise(resolve=>{release=resolve;});};
+      ui.refreshRuntime();el('connect').click();ui.refreshRuntime();el('connect').click();
+      check('refresh-keeps-both-actions-locked-during-connect',calls===1 && el('connect').disabled && el('install').disabled && el('connect').textContent==='连接中…');
+      release();await waitFor(()=>!ui.pendingActions.has('connect'));
+      check('connect-completion-restores-actions',!el('connect').disabled&&!el('install').disabled);
+      let failed=false;
+      settings.runtime.state=()=>({...runtimeState(),phase:failed?'error':'idle',ready:false});
+      settings.runtime.ensure=async()=>{failed=true;throw new Error('准备失败测试');};
+      ui.refreshRuntime();el('install').click();await waitFor(()=>!ui.pendingActions.has('install'));
+      check('failed-preparation-finally-keeps-connect-disabled',el('connect').disabled&&!el('install').disabled&&el('install').textContent==='重试');
+    } finally {
+      settings.runtime.connect=originalConnect;settings.runtime.ensure=originalEnsure;settings.runtime.state=runtimeState;
+      ui.refreshRuntime();
+    }
     const toggle = (suffix, value) => { el(suffix).checked=value; el(suffix).dispatchEvent(new win.Event('change',{bubbles:true})); };
     toggle('auto-text',false);toggle('auto-region',false);
     check('ui-toggles-write-persistent-preferences', !settings.state().autoText && !settings.state().autoRegion && Zotero.Prefs.get('extensions.zotero-codex.autoRegion',true)===false);
@@ -44,10 +82,10 @@
     check('disabled-api-reported-separately', disabledReport.bridge.ok && disabledReport.nativeAPI.status===403 && el('native').textContent.includes('未开启'));
     Zotero.Prefs.set('httpServer.localAPI.enabled',true);
     const config = JSON.parse(await IOUtils.readUTF8(PathUtils.join(base,'connection.json')));
-    await Zotero.HTTP.request('POST',config.url,{headers:{'Zotero-Allowed-Request':'true','Content-Type':'application/json',Authorization:'Bearer '+config.token},body:JSON.stringify({name:'zotero_status',arguments:{},client:{version:'0.8.1',nodePath:'node',serverPath:PathUtils.join(base,'fixture-server.mjs')}})});
+    await Zotero.HTTP.request('POST',config.url,{headers:{'Zotero-Allowed-Request':'true','Content-Type':'application/json',Authorization:'Bearer '+config.token},body:JSON.stringify({name:'zotero_status',arguments:{},client:{version:'0.8.2',nodePath:'node',serverPath:PathUtils.join(base,'fixture-server.mjs')}})});
     await IOUtils.writeUTF8(PathUtils.join(base,'fixture-server.mjs'),'// Synthetic service path for configuration copy test');
     ui.refresh();
-    check('authenticated-client-runtime-detected', settings.state().lastRequestAt && el('server-path').value.endsWith('fixture-server.mjs') && el('server-version').textContent==='0.8.1');
+    check('authenticated-client-runtime-detected', settings.state().lastRequestAt && el('server-path').value.endsWith('fixture-server.mjs') && el('server-version').textContent==='0.8.2');
     // Test the clipboard action without changing the real user's clipboard.
     const copy = Zotero.Utilities.Internal.copyTextToClipboard;
     let copied;
@@ -78,9 +116,15 @@
     result.layout={width:rect.width,height:rect.height,scrollWidth:el('settings').scrollWidth,windowWidth:win.innerWidth,windowHeight:win.innerHeight};
     // Render both parts of the isolated preferences pane for visual verification.
     try {
-      for (const [name,scrollTop] of [['preferences',0],['preferences-bottom',2000],['preferences-developer',2000]]) {
-        if(name==='preferences-developer'){el('connection-details').open=true;toggle('developer-mode',true);}
-        win.Zotero_Preferences.content.scrollTop=scrollTop;
+      for (const [name,target] of [['preferences',null],['preferences-reading','reading-title'],['preferences-bottom','client-title'],['preferences-developer','advanced'],['preferences-narrow',null]]) {
+        if(name==='preferences-developer'){el('advanced').open=true;el('connection-details').open=true;toggle('developer-mode',true);}
+        if(name==='preferences-narrow'){
+          el('settings').style.width='360px';
+          ui.feedback('较长的状态提示应该在刷新按钮右边自动换行，不会超出设置页。');
+          check('narrow-layout-does-not-overflow', el('settings').scrollWidth<=362);
+        }
+        if(target) el(target).scrollIntoView({block:'start'});
+        else win.Zotero_Preferences.content.scrollTop=0;
         await Zotero.Promise.delay(100);
         const bitmap=await win.browsingContext.currentWindowGlobal.drawSnapshot(new win.DOMRect(0,0,win.innerWidth,win.innerHeight),1,'white');
         const canvas=win.document.createElementNS('http://www.w3.org/1999/xhtml','canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;
@@ -88,6 +132,7 @@
         const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
         await IOUtils.write(PathUtils.join(base,name+'.png'),new Uint8Array(await blob.arrayBuffer()));
       }
+      el('settings').style.width='';
       win.Zotero_Preferences.content.scrollTop=0;
       result.screenshot=true;
     } catch { result.screenshot=false; }

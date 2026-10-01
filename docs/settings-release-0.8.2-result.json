@@ -1,0 +1,154 @@
+{
+  "date": "2026-10-02",
+  "version": "0.8.2",
+  "zoteroVersion": "10.0.4",
+  "checks": [
+    {
+      "name": "registered-native-preference-pane",
+      "pass": true
+    },
+    {
+      "name": "pane-loads-with-status-and-defaults",
+      "pass": true
+    },
+    {
+      "name": "advanced-paths-hidden-until-requested",
+      "pass": true
+    },
+    {
+      "name": "advanced-section-collapsed-by-default",
+      "pass": true
+    },
+    {
+      "name": "idle-runtime-is-not-shown-as-checking",
+      "pass": true
+    },
+    {
+      "name": "prepare-precedes-connect",
+      "pass": true
+    },
+    {
+      "name": "idle-prompts-preparation-and-blocks-connection",
+      "pass": true
+    },
+    {
+      "name": "runtime-badge-downloading-false",
+      "pass": true
+    },
+    {
+      "name": "runtime-actions-downloading-false",
+      "pass": true
+    },
+    {
+      "name": "runtime-badge-ready-false",
+      "pass": true
+    },
+    {
+      "name": "runtime-actions-ready-false",
+      "pass": true
+    },
+    {
+      "name": "runtime-badge-ready-true",
+      "pass": true
+    },
+    {
+      "name": "runtime-actions-ready-true",
+      "pass": true
+    },
+    {
+      "name": "runtime-badge-error-false",
+      "pass": true
+    },
+    {
+      "name": "runtime-actions-error-false",
+      "pass": true
+    },
+    {
+      "name": "refresh-keeps-both-actions-locked-during-connect",
+      "pass": true
+    },
+    {
+      "name": "connect-completion-restores-actions",
+      "pass": true
+    },
+    {
+      "name": "failed-preparation-finally-keeps-connect-disabled",
+      "pass": true
+    },
+    {
+      "name": "ui-toggles-write-persistent-preferences",
+      "pass": true
+    },
+    {
+      "name": "disabled-text-capture-keeps-manual-button",
+      "pass": true
+    },
+    {
+      "name": "manual-text-capture-works-when-auto-disabled",
+      "pass": true
+    },
+    {
+      "name": "clear-context-button",
+      "pass": true
+    },
+    {
+      "name": "disabling-clears-existing-auto-text",
+      "pass": true
+    },
+    {
+      "name": "real-loopback-diagnostics-pass",
+      "pass": true
+    },
+    {
+      "name": "diagnostics-do-not-claim-client-connected",
+      "pass": true
+    },
+    {
+      "name": "disabled-api-reported-separately",
+      "pass": true
+    },
+    {
+      "name": "authenticated-client-runtime-detected",
+      "pass": true
+    },
+    {
+      "name": "copy-config-button-with-real-paths",
+      "pass": true
+    },
+    {
+      "name": "developer-mode-explains-export-only",
+      "pass": true
+    },
+    {
+      "name": "custom-export-does-not-change-automatic-paths",
+      "pass": true
+    },
+    {
+      "name": "invalid-custom-path-reports-error-next-to-export",
+      "pass": true
+    },
+    {
+      "name": "disabling-developer-mode-restores-automatic-export",
+      "pass": true
+    },
+    {
+      "name": "copy-diagnostics-is-redacted",
+      "pass": true
+    },
+    {
+      "name": "narrow-layout-does-not-overflow",
+      "pass": true
+    },
+    {
+      "name": "native-pane-visible-without-horizontal-overflow",
+      "pass": true
+    }
+  ],
+  "layout": {
+    "width": 578,
+    "height": 1369.199951171875,
+    "scrollWidth": 578,
+    "windowWidth": 800,
+    "windowHeight": 600
+  }
+}

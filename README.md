@@ -1,8 +1,8 @@
-# Zotero Codex MCP 0.8.1
+# Zotero Codex MCP 0.8.2
 
 在 Zotero 看论文、写 Better Notes，在 Codex 中直接读 PDF、讨论选区、编辑笔记。
 
-[下载 XPI](https://github.com/renhao12356578/zotero-codex/releases/latest) · [安装指南](docs/local-setup.md) · [MIT 许可证](LICENSE)
+[下载 XPI](https://github.com/haohaomin/zotero-codex/releases/latest) · [安装指南](docs/local-setup.md) · [MIT 许可证](LICENSE)
 
 本项目为社区开发，与 OpenAI、Zotero 官方无隶属关系。通过本地 MCP 连接 Zotero；选中的论文/笔记内容会作为上下文交给你使用的 AI 客户端。
 
@@ -18,7 +18,7 @@
 
 合并依据、工具迁移和取舍见 [docs/tool-consolidation.md](docs/tool-consolidation.md)。旧 `zotero_library_*` 名称不再暴露；搜索使用 `q`，条目读取使用 `itemKey`，不再使用旧版 `query`/`item` 参数。
 
-0.8.1 的高级设置默认展示只读连接信息；开发者模式可临时指定导出路径，不修改自动组件和现有 Codex 连接。0.8.0 起优先检测并复用本机兼容 Node.js，只下载服务和依赖；不可用时自动回退到专用运行环境。仍支持一键连接 Codex，普通用户无需源码或终端。Zotero 原生设置页：在「设置 → Zotero MCP」查看连接状态、控制自动捕获、复制连接配置和运行脱敏诊断。0.5.1 起支持区域截图自动捕获，无需拖入侧栏。
+0.8.2 优化原生设置布局，按照「准备组件 → 连接 Codex」引导连接，支持运行状态提示和操作锁定。0.8.1 的高级设置默认展示只读连接信息；开发者模式可临时指定导出路径，不修改自动组件和现有 Codex 连接。0.8.0 起优先检测并复用本机兼容 Node.js，只下载服务和依赖；不可用时自动回退到专用运行环境。仍支持一键连接 Codex，普通用户无需源码或终端。Zotero 原生设置页：在「设置 → Zotero MCP」查看连接状态、控制自动捕获、复制连接配置和运行脱敏诊断。0.5.1 起支持区域截图自动捕获，无需拖入侧栏。
 
 ## 可以做什么
 
@@ -50,7 +50,7 @@
 
 需要 Zotero 10 和支持本地 MCP 的 Codex 客户端；实时笔记协作需要 Better Notes（已验证 3.3.3）。
 
-1. 从 [Release](https://github.com/renhao12356578/zotero-codex/releases/latest) 下载 XPI，在 Zotero「工具 → 插件 → 从文件安装插件」安装。
+1. 从 [Release](https://github.com/haohaomin/zotero-codex/releases/latest) 下载 XPI，在 Zotero「工具 → 插件 → 从文件安装插件」安装。
 2. 打开「设置 → Zotero MCP」，插件会自动下载并检查运行组件。准备好后点击「连接 Codex」。
 3. 重启 Codex，保持 Zotero 打开，发送“检查 Zotero 连接状态”。
 

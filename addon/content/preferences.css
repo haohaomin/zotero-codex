@@ -1,72 +1,93 @@
 #zc-settings {
+  --zc-border: light-dark(#dedee2, #414147);
+  --zc-surface: light-dark(#fff, #29292d);
+  --zc-subtle: light-dark(#f5f5f7, #323236);
+  --zc-ink: light-dark(#252529, #eeeef0);
+  --zc-secondary: light-dark(#65656c, #b5b5bd);
   box-sizing: border-box;
   width: 100%;
-  max-width: 820px;
+  max-width: 780px;
   padding: 0 4px 24px;
+  color: var(--zc-ink);
+  container-type: inline-size;
 }
-
-#zc-settings .zc-intro,
-#zc-settings .zc-muted {
-  color: var(--fill-secondary, #666);
-  font-size: 0.94em;
+#zc-settings *, #zc-settings *::before, #zc-settings *::after { box-sizing: border-box; }
+#zc-settings .zc-intro, #zc-settings .zc-muted, #zc-settings .zc-hint {
+  color: var(--zc-secondary);
   line-height: 1.55;
+  font-size: 0.94em;
 }
-
+#zc-settings p { margin: 10px 0; overflow-wrap: anywhere; }
 #zc-settings .zc-intro { margin: 0 0 18px; }
 #zc-settings .zc-group {
-  box-sizing: border-box;
-  width: 100%;
-  margin: 0 0 18px;
-  padding: 12px 14px 14px;
-}
-#zc-settings .zc-group > label { margin: 0 0 10px; }
-#zc-settings h2 { margin: 0; font-size: 1.15em; font-weight: 600; }
-#zc-settings p { line-height: 1.55; margin: 10px 0; }
-
-#zc-settings .zc-status {
-  display: grid;
-  grid-template-columns: minmax(120px, 150px) minmax(0, 1fr);
-  gap: 9px 18px;
-  margin: 8px 0 12px;
-}
-#zc-settings dt { color: var(--fill-secondary, #666); }
-#zc-settings dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
-
-#zc-settings .zc-actions {
-  display: -moz-box;
-  -moz-box-align: center;
-  margin: 10px 0 2px;
-}
-#zc-settings .zc-actions > * { margin-inline-end: 8px; }
-#zc-settings .zc-actions > *:last-child { margin-inline-end: 0; }
-#zc-settings button { font: inherit; }
-#zc-settings .zc-inline-feedback {
-  color: var(--fill-secondary, #666);
-  font-size: 0.94em;
-  white-space: nowrap;
-}
-#zc-settings .zc-toggle {
   display: block;
-  margin: 9px 0;
-}
-#zc-settings .zc-toggle input { margin: 0 8px 0 0; vertical-align: -1px; }
-#zc-settings .zc-field { display: block; margin: 12px 0 6px; }
-#zc-settings .zc-path-detail { user-select: text; font-size: 0.94em; }
-#zc-settings #zc-developer-fields[hidden] { display: none; }
-#zc-settings #zc-config-feedback:empty { display: none; }
-#zc-settings .zc-path {
-  box-sizing: border-box;
-  display: block;
-  width: 100%;
   min-width: 0;
-  margin: 0;
-  padding: 6px 9px;
-  border-radius: 5px;
-  font: inherit;
+  margin: 0 0 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--zc-border);
+  border-radius: 14px;
+  background: var(--zc-surface);
 }
-#zc-settings #zc-diagnostics { margin-top: 12px; }
-
-@media (max-width: 620px) {
-  #zc-settings .zc-status { grid-template-columns: 112px minmax(0, 1fr); gap: 8px 12px; }
-  #zc-settings .zc-inline-feedback { white-space: normal; }
+#zc-settings h2 { margin: 0; font-size: 1.08em; font-weight: 600; line-height: 1.5; }
+#zc-settings .zc-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#zc-settings .zc-badge { flex: 0 0 auto; padding: 4px 9px; border-radius: 20px; font-size: 0.85em; background: var(--zc-subtle); color: var(--zc-secondary); }
+#zc-settings .zc-badge[data-tone="ready"] { color: light-dark(#326445, #acd7b8); background: light-dark(#edf5ef, #263c2e); }
+#zc-settings .zc-badge[data-tone="error"] { color: light-dark(#8a4827, #f0be9c); background: light-dark(#fff2e9, #483426); }
+#zc-settings #zc-node-source { font-size: 0.88em; margin-top: 4px; }
+#zc-settings .zc-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0 0; min-width: 0; }
+#zc-settings button {
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  line-height: 1.35;
+  min-height: 32px;
+  max-width: 100%;
+  margin: 0;
+  padding: 6px 12px;
+  border: 1px solid var(--zc-border);
+  border-radius: 8px;
+  background: var(--zc-surface);
+  cursor: pointer;
+}
+#zc-settings button:hover { background: var(--zc-subtle); }
+#zc-settings button:active { background: light-dark(#ebebef, #414147); }
+#zc-settings button:disabled { opacity: 0.55; cursor: default; }
+#zc-settings .zc-primary { background: var(--zc-subtle); border-color: light-dark(#bbbcc3, #72727c); font-weight: 600; }
+#zc-settings :is(button, input, summary):focus-visible { outline: 2px solid var(--zc-secondary); outline-offset: 3px; }
+#zc-settings .zc-inline-feedback { flex: 1 1 160px; min-width: 0; color: var(--zc-secondary); line-height: 1.5; font-size: 0.9em; overflow-wrap: anywhere; }
+#zc-settings .zc-inline-feedback:empty { display: none; }
+#zc-settings .zc-disclosure { border-top: 1px solid var(--zc-border); margin-top: 16px; padding-top: 12px; }
+#zc-settings summary { cursor: pointer; padding: 5px 0; line-height: 1.5; font-weight: 500; }
+#zc-settings details[open] > summary { margin-bottom: 8px; }
+#zc-settings .zc-service-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 16px; border-top: 1px solid var(--zc-border); padding-top: 16px; }
+#zc-settings .zc-service-grid > div { display: flex; flex-direction: column; gap: 5px; min-width: 0; overflow-wrap: anywhere; }
+#zc-settings .zc-service-grid span { color: var(--zc-secondary); font-size: 0.88em; }
+#zc-settings .zc-service-grid strong { font-weight: 500; font-size: 0.94em; line-height: 1.5; }
+#zc-settings .zc-option { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 13px 0; cursor: pointer; }
+#zc-settings .zc-option + .zc-option { border-top: 1px solid var(--zc-border); }
+#zc-settings .zc-option > span { min-width: 0; }
+#zc-settings .zc-option strong { display: block; font-weight: 500; line-height: 1.5; }
+#zc-settings .zc-option small { display: block; font-size: 0.9em; color: var(--zc-secondary); line-height: 1.5; margin-top: 3px; }
+#zc-settings input[type="checkbox"] { accent-color: light-dark(#63636a, #c1c1c9); width: 16px; height: 16px; margin: 0; flex-shrink: 0; }
+#zc-settings .zc-toggle { display: flex; gap: 9px; align-items: center; margin: 14px 0 8px; line-height: 1.5; }
+#zc-settings .zc-separated { border-top: 1px solid var(--zc-border); padding-top: 14px; }
+#zc-settings .zc-status { display: grid; grid-template-columns: minmax(90px, 130px) minmax(0, 1fr); gap: 10px 16px; margin: 12px 0; font-size: 0.94em; line-height: 1.55; }
+#zc-settings dt { color: var(--zc-secondary); }
+#zc-settings dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
+#zc-settings .zc-path-detail { user-select: text; font-size: 0.94em; }
+#zc-settings #zc-developer-fields { padding: 0 12px 12px; border-radius: 10px; background: var(--zc-subtle); }
+#zc-settings [hidden] { display: none !important; }
+#zc-settings :is(#zc-config-feedback, #zc-diagnostics):empty { display: none; }
+#zc-settings .zc-field { display: block; margin: 12px 0 6px; line-height: 1.5; }
+#zc-settings .zc-path { display: block; width: 100%; min-width: 0; padding: 8px 10px; border: 1px solid var(--zc-border); border-radius: 8px; font: inherit; background: var(--zc-surface); color: inherit; }
+#zc-settings .zc-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; color: var(--zc-secondary); font-size: 0.9em; padding: 0 2px; }
+#zc-settings .zc-footer .zc-actions { margin: 0; }
+#zc-settings .zc-footer button { border-color: transparent; background: transparent; }
+#zc-settings .zc-footer button:hover { background: var(--zc-subtle); }
+@container (max-width: 420px) {
+  #zc-settings .zc-group { padding: 16px; }
+  #zc-settings .zc-service-grid { grid-template-columns: 1fr; gap: 8px; }
+  #zc-settings .zc-service-grid > div { flex-direction: row; justify-content: space-between; gap: 12px; }
+  #zc-settings .zc-status { grid-template-columns: 1fr; gap: 4px; }
+  #zc-settings .zc-status dd { margin-bottom: 8px; }
 }

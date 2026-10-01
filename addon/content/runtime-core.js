@@ -1,6 +1,6 @@
 /* Shared validation for the installer; also exercised without a Zotero host. */
 var ZoteroMCPRuntimeCore = (() => {
-  const repository = 'https://github.com/renhao12356578/zotero-codex';
+  const repository = 'https://github.com/haohaomin/zotero-codex';
   const supported = ['darwin-arm64', 'darwin-x64', 'win32-x64', 'linux-x64', 'linux-arm64'];
   function platform(os, abi) {
     const system = {Darwin:'darwin', WINNT:'win32', Linux:'linux'}[os];

@@ -1,6 +1,6 @@
 // Real Gecko extraction/process/configuration tests in an isolated Zotero profile.
 (async () => {
-  const result={version:'0.8.1',checks:[]};
+  const result={version:'0.8.2',checks:[]};
   const check=(name,pass)=>{result.checks.push({name,pass:Boolean(pass)});if(!pass)throw new Error(name);};
   const waitFor=async fn=>{for(let i=0;i<900;i++){if(await fn())return;await Zotero.Promise.delay(100);}throw new Error('wait timed out');};
   const request=Zotero.HTTP.request,download=Zotero.HTTP.download;
@@ -14,7 +14,7 @@
     const part=JSON.parse(await IOUtils.readUTF8(PathUtils.join(base,'runtime-manifest.json')));
     const key=Object.keys(part.assets)[0],assets=[part.assets[key],part.services[key]];
     Zotero.HTTP.request=async function(method,url,options){
-      if(url.endsWith('/v0.8.1/runtime-manifest.json')){
+      if(url.endsWith('/v0.8.2/runtime-manifest.json')){
         const manifest=JSON.parse(JSON.stringify(part));if(badHash)for(const group of ['assets','services'])manifest[group][key].sha256='0'.repeat(64);
         return {status:200,response:manifest};
       }

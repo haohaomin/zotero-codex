@@ -1,5 +1,6 @@
 var ZoteroMCPPreferences = {
   initialized: false,
+  pendingActions: new Set(),
   get api() {
     if (!Zotero.ZoteroCodex?.settings) throw new Error('插件已关闭，请重新启用后打开设置');
     return Zotero.ZoteroCodex.settings;
@@ -8,12 +9,21 @@ var ZoteroMCPPreferences = {
   feedback(message) { this.el('feedback').textContent = message; },
   bind(id, action) {
     this.el(id).addEventListener('click', async () => {
-      const button = this.el(id); button.disabled = true;
+      const button = this.el(id);
+      if (button.disabled || this.pendingActions.has(id)) return;
+      this.pendingActions.add(id);
+      button.disabled = true;
+      const runtimeAction = id === 'install' || id === 'connect';
+      if (runtimeAction) this.refreshRuntime();
       try { await action(); } catch (error) {
         if (id === 'copy-config') this.el('config-feedback').textContent = error.message;
         else this.feedback(error.message);
       }
-      finally { button.disabled = false; }
+      finally {
+        this.pendingActions.delete(id);
+        if (runtimeAction) this.refreshRuntime();
+        else button.disabled = false;
+      }
     });
   },
   init() {
@@ -60,7 +70,7 @@ var ZoteroMCPPreferences = {
       Zotero.Utilities.Internal.copyTextToClipboard(JSON.stringify(report, null, 2));
       this.feedback('诊断信息已复制，不含令牌、路径或论文笔记内容');
     });
-    const repo = 'https://github.com/renhao12356578/zotero-codex';
+    const repo = 'https://github.com/haohaomin/zotero-codex';
     for (const [id, url] of [['help',repo + '/blob/main/docs/local-setup.md'], ['github',repo], ['releases',repo + '/releases/latest']]) {
       this.bind(id, () => Zotero.launchURL(url));
     }
@@ -73,12 +83,28 @@ var ZoteroMCPPreferences = {
       if (this.el('runtime-status').textContent !== state.message) this.el('runtime-status').textContent = state.message;
       this.el('auto-install').checked = state.automatic;
       this.el('prefer-system').checked = state.preferSystem;
-      this.el('node-source').textContent = state.nodeLabel || '正在检查可用的 Node.js…';
+      const busy = ['checking','downloading','verifying','installing'].includes(state.phase);
+      const preparing = this.pendingActions.has('install');
+      const connecting = this.pendingActions.has('connect');
+      const unavailable = busy || preparing || connecting;
+      const ready = state.ready && state.phase !== 'error';
+      const install = this.el('install'), connect = this.el('connect');
+      install.textContent = connecting ? '重新检查组件' : busy || preparing ? '准备中…' : state.phase === 'error' ? '重试' : ready ? '重新检查组件' : '准备组件';
+      connect.textContent = connecting ? '连接中…' : '连接 Codex';
+      install.disabled = unavailable;
+      connect.disabled = unavailable || !ready;
+      install.classList.toggle('zc-primary', !ready);
+      connect.classList.toggle('zc-primary', Boolean(ready));
+      this.el('connection-hint').textContent = connecting ? '正在更新连接配置，请稍候。' : busy || preparing ? '组件准备完成后即可连接，请稍候。' : state.phase === 'error' ? '组件准备或配置未完成，请先重试。' : ready ? '组件已就绪。连接后重启 Codex，使用时保持 Zotero 打开。' : '先准备运行组件，再连接 Codex。连接后重启 Codex。';
+      this.el('node-source').textContent = state.nodeLabel || (busy ? '正在准备运行环境…' : '运行环境将在准备组件后显示');
+      const badge = this.el('runtime-badge');
+      badge.textContent = state.phase === 'error' ? '需要处理' : busy ? '准备中' : state.ready ? (state.configured ? 'Codex 已配置' : '组件已就绪') : '待准备';
+      badge.dataset.tone = state.phase === 'error' ? 'error' : state.ready && !busy ? 'ready' : 'idle';
       this.el('runtime-label').textContent = state.nodeLabel || '尚未就绪';
       this.el('runtime-version').textContent = state.ready ? this.api.state().version : '尚未就绪';
       const paths = this.api.state();
       this.el('node-detail').textContent = paths.nodePath || '尚未确定';
-      this.el('server-detail').textContent = paths.serverPath || '尚未准备，请点击「准备 / 重试」';
+      this.el('server-detail').textContent = paths.serverPath || '尚未准备，请先准备运行组件';
     } catch { /* Pane can outlive a disabled plugin. */ }
   },
   refresh(fillPaths = false) {

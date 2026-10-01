@@ -1,47 +1,66 @@
 <vbox id="zc-settings" onload="Zotero_Preferences.getScope('zotero-codex-preferences').ZoteroMCPPreferences.init()" onshowing="Zotero_Preferences.getScope('zotero-codex-preferences').ZoteroMCPPreferences.refresh()">
-  <html:p class="zc-intro">让 Codex 与论文阅读、选区和 Better Notes 笔记协作。</html:p>
-  <groupbox class="zc-group">
-    <label><html:h2>安装与连接</html:h2></label>
-    <html:p id="zc-node-source" class="zc-muted"/>
+  <html:p class="zc-intro">连接你的 AI 客户端，让论文、选区和笔记一起参与对话。</html:p>
+  <html:section class="zc-group zc-connection" aria-labelledby="zc-connect-title">
+    <html:div class="zc-section-head">
+      <html:h2 id="zc-connect-title">连接与运行</html:h2>
+      <html:span id="zc-runtime-badge" class="zc-badge">待检查</html:span>
+    </html:div>
     <html:p id="zc-runtime-status" role="status" aria-live="polite">正在检查运行组件…</html:p>
-    <hbox class="zc-actions" align="center">
-      <html:button id="zc-connect" type="button">连接 Codex</html:button>
-      <html:button id="zc-install" type="button">准备 / 重试</html:button>
-    </hbox>
-    <html:label class="zc-toggle"><html:input id="zc-prefer-system" type="checkbox"/>优先复用本机 Node.js</html:label>
-    <html:label class="zc-toggle"><html:input id="zc-auto-install" type="checkbox"/>自动下载和更新运行组件</html:label>
-    <html:p class="zc-muted">优先检测并验证本机 Node.js，通过后只下载服务与依赖；不可用时自动使用专用环境。组件来自本项目 GitHub Release。首次准备完成后点击「连接 Codex」，再重启 Codex 即可使用；无需安装 Node.js、下载源码或填写路径。连接时会开启 Zotero 本地 API，并备份、更新 Codex 的 Zotero 配置。</html:p>
-  </groupbox>
-  <groupbox class="zc-group">
-    <label><html:h2>连接状态</html:h2></label>
-    <html:dl class="zc-status">
-      <html:dt>插件版本</html:dt><html:dd id="zc-version"/>
-      <html:dt>本地桥接服务</html:dt><html:dd id="zc-bridge"/>
-      <html:dt>Zotero 本地 API</html:dt><html:dd id="zc-native"/>
-      <html:dt>Better Notes</html:dt><html:dd id="zc-notes"/>
-      <html:dt>最近访问插件</html:dt><html:dd id="zc-last-request"/>
-      <html:dt>MCP 服务版本</html:dt><html:dd id="zc-server-version"/>
-    </html:dl>
-    <html:p class="zc-muted">最近访问仅记录客户端访问本插件的请求，不代表 Codex 持续在线。本地 API 开关位于 Zotero「高级」设置。</html:p>
-    <hbox class="zc-actions" align="center">
+    <html:p id="zc-node-source" class="zc-muted"/>
+    <html:div class="zc-actions">
+      <html:button id="zc-install" class="zc-primary" type="button">准备组件</html:button>
+      <html:button id="zc-connect" type="button" disabled="disabled" aria-describedby="zc-connection-hint">连接 Codex</html:button>
+    </html:div>
+    <html:p id="zc-connection-hint" class="zc-hint">先准备运行组件，再连接 Codex。连接后重启 Codex。</html:p>
+    <html:details class="zc-disclosure">
+      <html:summary>运行环境与自动更新</html:summary>
+      <html:label class="zc-option"><html:span><html:strong>优先复用本机 Node.js</html:strong><html:small>检测通过后仅下载服务组件，不可用时使用专用环境。</html:small></html:span><html:input id="zc-prefer-system" type="checkbox"/></html:label>
+      <html:label class="zc-option"><html:span><html:strong>自动准备运行组件</html:strong><html:small>启动时检查并下载对应版本；关闭后仍可手动准备。</html:small></html:span><html:input id="zc-auto-install" type="checkbox"/></html:label>
+      <html:p class="zc-muted">组件来自本项目 GitHub Release，无需手动安装 Node.js 或下载源码。「连接 Codex」会开启 Zotero 本地 API，备份并更新 Codex 连接配置。</html:p>
+    </html:details>
+    <html:div class="zc-service-grid" aria-label="本地服务状态">
+      <html:div><html:span>本地桥接</html:span><html:strong id="zc-bridge"/></html:div>
+      <html:div><html:span>Zotero API</html:span><html:strong id="zc-native"/></html:div>
+      <html:div><html:span>Better Notes</html:span><html:strong id="zc-notes"/></html:div>
+    </html:div>
+    <html:details class="zc-disclosure">
+      <html:summary>版本与客户端访问记录</html:summary>
+      <html:dl class="zc-status">
+        <html:dt>插件版本</html:dt><html:dd id="zc-version"/>
+        <html:dt>MCP 服务版本</html:dt><html:dd id="zc-server-version"/>
+        <html:dt>最近访问</html:dt><html:dd id="zc-last-request"/>
+      </html:dl>
+      <html:p class="zc-muted">访问记录不代表客户端持续在线。本地 API 开关位于 Zotero「高级」设置。</html:p>
+    </html:details>
+    <html:div class="zc-actions zc-refresh-row">
       <html:button id="zc-refresh" type="button">刷新状态</html:button>
       <html:span id="zc-feedback" class="zc-inline-feedback" role="status" aria-live="polite"/>
-    </hbox>
-  </groupbox>
-  <groupbox class="zc-group">
-    <label><html:h2>阅读上下文</html:h2></label>
-    <html:label class="zc-toggle"><html:input id="zc-auto-text" type="checkbox"/>自动捕获文字选区</html:label>
-    <html:label class="zc-toggle"><html:input id="zc-auto-region" type="checkbox"/>自动捕获区域截图</html:label>
-    <html:p class="zc-muted">设置立即生效。关闭后会清除对应的自动快照，仍可点击选区中的「添加到 MCP」或拖入批注。不会自动发送消息。</html:p>
-    <hbox class="zc-actions" align="center">
+    </html:div>
+  </html:section>
+  <html:section class="zc-group" aria-labelledby="zc-reading-title">
+    <html:h2 id="zc-reading-title">阅读上下文</html:h2>
+    <html:p class="zc-muted">自动准备你正在阅读的内容，供 AI 在你提问时读取。</html:p>
+    <html:label class="zc-option"><html:span><html:strong>文字选区</html:strong><html:small>选中文字后保存快照，无需再次添加。</html:small></html:span><html:input id="zc-auto-text" type="checkbox"/></html:label>
+    <html:label class="zc-option"><html:span><html:strong>区域截图</html:strong><html:small>新建区域批注后准备图片，无需拖入侧栏。</html:small></html:span><html:input id="zc-auto-region" type="checkbox"/></html:label>
+    <html:p class="zc-hint">不会自动发送消息。关闭会清除对应的自动快照，仍可手动添加选区或拖入批注。</html:p>
+    <html:div class="zc-actions zc-separated">
       <html:button id="zc-clear" type="button">清除当前上下文</html:button>
       <html:span id="zc-context-count" class="zc-muted"/>
-    </hbox>
-    <html:p class="zc-muted">清除所有阅读器的 MCP 选区快照；已保存的批注和笔记不受影响。</html:p>
-  </groupbox>
-  <groupbox class="zc-group">
-    <label><html:h2>高级设置</html:h2></label>
-    <html:p class="zc-muted">用于连接其他 AI 客户端、查看连接路径或调试自己的 MCP 服务。日常使用只需上方「连接 Codex」，无需在这里修改路径。</html:p>
+    </html:div>
+    <html:p class="zc-hint">仅清除 MCP 快照，保留已保存的批注和笔记。</html:p>
+  </html:section>
+  <html:section class="zc-group" aria-labelledby="zc-client-title">
+    <html:h2 id="zc-client-title">其他客户端</html:h2>
+    <html:p class="zc-muted">复制本机 MCP 配置，添加到支持 mcpServers 的客户端，再重新加载 MCP。</html:p>
+    <html:div class="zc-actions">
+      <html:button id="zc-copy-config" type="button">复制 MCP 配置</html:button>
+      <html:button id="zc-help" type="button">安装说明</html:button>
+    </html:div>
+    <html:p id="zc-config-feedback" class="zc-muted" role="status" aria-live="polite"/>
+    <html:p class="zc-hint">复制不会建立连接。配置含本机路径，不含访问令牌。</html:p>
+    <html:details id="zc-advanced" class="zc-disclosure">
+      <html:summary>高级设置</html:summary>
+      <html:p class="zc-muted">查看路径或调试自定义服务。日常连接无需修改。</html:p>
     <html:details id="zc-connection-details"><html:summary>查看连接详情</html:summary>
       <html:p class="zc-muted">以下是插件当前使用的自动配置，供查看和排查问题。</html:p>
       <html:dl class="zc-status">
@@ -63,25 +82,22 @@
       <html:input class="zc-path" id="zc-server-path" type="text" placeholder="mcp/server.mjs 的完整路径" spellcheck="false" aria-describedby="zc-server-help"/>
       <html:p id="zc-server-help" class="zc-muted">填写与本插件兼容的服务脚本完整路径。复制时检查文件是否存在，不会运行或验证自定义服务。</html:p>
     </html:div>
-    <hbox class="zc-actions" align="center">
-      <html:button id="zc-copy-config" type="button">复制 MCP 配置</html:button>
-      <html:button id="zc-reveal" type="button">打开连接文件所在目录</html:button>
-      <html:button id="zc-help" type="button">安装说明</html:button>
-    </hbox>
-    <html:p id="zc-config-feedback" class="zc-muted" role="status" aria-live="polite"/>
-    <html:p class="zc-muted">复制后，在目标客户端添加配置并重新加载 MCP。配置采用 mcpServers JSON 格式，是否支持请以该客户端为准；仅复制不会建立连接。</html:p>
-    <html:p class="zc-muted">连接文件记录本机桥接地址和访问令牌；打开目录用于排查问题，无需手动编辑。请勿公开分享或移动该文件。复制的配置不含令牌，但包含本机路径，不适合直接用于另一台电脑。</html:p>
-  </groupbox>
-  <groupbox class="zc-group">
-    <label><html:h2>诊断与关于</html:h2></label>
-    <hbox class="zc-actions" align="center">
+      <html:p class="zc-muted">开启开发者模式后，使用上方「复制自定义 MCP 配置」导出；在目标客户端添加并重新加载后生效。</html:p>
+      <html:div class="zc-actions"><html:button id="zc-reveal" type="button">打开连接文件所在目录</html:button></html:div>
+      <html:p class="zc-muted">连接文件含本机桥接地址和访问令牌，仅用于排查问题，请勿公开分享或移动。复制的配置不能直接用于另一台电脑。</html:p>
+    </html:details>
+  </html:section>
+  <html:section class="zc-group" aria-labelledby="zc-diagnostic-title">
+    <html:h2 id="zc-diagnostic-title">连接诊断</html:h2>
+    <html:p class="zc-muted">检查本机桥接与 Zotero API，不会调用 AI。</html:p>
+    <html:div class="zc-actions">
       <html:button id="zc-check" type="button">运行连接检查</html:button>
       <html:button id="zc-copy-diagnostics" type="button">复制脱敏诊断信息</html:button>
-    </hbox>
-    <html:p id="zc-diagnostics" class="zc-muted" aria-live="polite">检查本机桥接和 Zotero API，不会调用 AI。</html:p>
-    <hbox class="zc-actions" align="center">
-      <html:button id="zc-github" type="button">GitHub 项目</html:button>
-      <html:button id="zc-releases" type="button">版本与更新</html:button>
-    </hbox>
-  </groupbox>
+    </html:div>
+    <html:p id="zc-diagnostics" class="zc-muted" aria-live="polite"/>
+  </html:section>
+  <html:footer class="zc-footer">
+    <html:span>Zotero MCP</html:span>
+    <html:div class="zc-actions"><html:button id="zc-github" type="button">GitHub 项目</html:button><html:button id="zc-releases" type="button">版本与更新</html:button></html:div>
+  </html:footer>
 </vbox>
