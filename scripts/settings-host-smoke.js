@@ -1,6 +1,6 @@
 // Packaged only into an isolated test profile by prepare-host-smoke.py.
 (async () => {
-  const result = {version:'0.8.1', stage:'preferences', checks:[]};
+  const result = {version:'0.8.2', stage:'preferences', checks:[]};
   const check = (name, pass) => { result.checks.push({name,pass:Boolean(pass)}); if (!pass) throw new Error(name); };
   const waitFor = async fn => { for (let i=0;i<150;i++) { if (await fn()) return; await Zotero.Promise.delay(100); } throw new Error('wait timed out'); };
   try {
@@ -10,7 +10,7 @@
     const id = 'zotero-codex-preferences';
     check('registered-native-preference-pane', Zotero.PreferencePanes.pluginPanes.some(p=>p.id===id && p.rawLabel==='Zotero MCP'));
     const win = Zotero.Utilities.Internal.openPreferences(id);
-    await waitFor(()=>win.document.getElementById('zc-version')?.textContent.includes('0.8.1'));
+    await waitFor(()=>win.document.getElementById('zc-version')?.textContent.includes('0.8.2'));
     const el = suffix=>win.document.getElementById('zc-'+suffix);
     const ui = win.Zotero_Preferences.getScope(id).ZoteroMCPPreferences;
     check('pane-loads-with-status-and-defaults', el('bridge').textContent==='已就绪' && el('auto-text').checked && el('auto-region').checked);
@@ -82,10 +82,10 @@
     check('disabled-api-reported-separately', disabledReport.bridge.ok && disabledReport.nativeAPI.status===403 && el('native').textContent.includes('未开启'));
     Zotero.Prefs.set('httpServer.localAPI.enabled',true);
     const config = JSON.parse(await IOUtils.readUTF8(PathUtils.join(base,'connection.json')));
-    await Zotero.HTTP.request('POST',config.url,{headers:{'Zotero-Allowed-Request':'true','Content-Type':'application/json',Authorization:'Bearer '+config.token},body:JSON.stringify({name:'zotero_status',arguments:{},client:{version:'0.8.1',nodePath:'node',serverPath:PathUtils.join(base,'fixture-server.mjs')}})});
+    await Zotero.HTTP.request('POST',config.url,{headers:{'Zotero-Allowed-Request':'true','Content-Type':'application/json',Authorization:'Bearer '+config.token},body:JSON.stringify({name:'zotero_status',arguments:{},client:{version:'0.8.2',nodePath:'node',serverPath:PathUtils.join(base,'fixture-server.mjs')}})});
     await IOUtils.writeUTF8(PathUtils.join(base,'fixture-server.mjs'),'// Synthetic service path for configuration copy test');
     ui.refresh();
-    check('authenticated-client-runtime-detected', settings.state().lastRequestAt && el('server-path').value.endsWith('fixture-server.mjs') && el('server-version').textContent==='0.8.1');
+    check('authenticated-client-runtime-detected', settings.state().lastRequestAt && el('server-path').value.endsWith('fixture-server.mjs') && el('server-version').textContent==='0.8.2');
     // Test the clipboard action without changing the real user's clipboard.
     const copy = Zotero.Utilities.Internal.copyTextToClipboard;
     let copied;

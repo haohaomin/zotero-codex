@@ -1,6 +1,6 @@
 {
   "name": "zotero-codex",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "private": true,
   "description": "Zotero reading and Better Notes companion for Codex",
   "engines": {
@@ -29,10 +29,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/renhao12356578/zotero-codex.git"
+    "url": "git+https://github.com/haohaomin/zotero-codex.git"
   },
-  "homepage": "https://github.com/renhao12356578/zotero-codex#readme",
+  "homepage": "https://github.com/haohaomin/zotero-codex#readme",
   "bugs": {
-    "url": "https://github.com/renhao12356578/zotero-codex/issues"
+    "url": "https://github.com/haohaomin/zotero-codex/issues"
   }
 }

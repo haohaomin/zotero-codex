@@ -70,7 +70,7 @@ var ZoteroMCPPreferences = {
       Zotero.Utilities.Internal.copyTextToClipboard(JSON.stringify(report, null, 2));
       this.feedback('诊断信息已复制，不含令牌、路径或论文笔记内容');
     });
-    const repo = 'https://github.com/renhao12356578/zotero-codex';
+    const repo = 'https://github.com/haohaomin/zotero-codex';
     for (const [id, url] of [['help',repo + '/blob/main/docs/local-setup.md'], ['github',repo], ['releases',repo + '/releases/latest']]) {
       this.bind(id, () => Zotero.launchURL(url));
     }
