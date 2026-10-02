@@ -87,6 +87,24 @@
       <html:p class="zc-muted">连接文件含本机桥接地址和访问令牌，仅用于排查问题，请勿公开分享或移动。复制的配置不能直接用于另一台电脑。</html:p>
     </html:details>
   </html:section>
+  <html:section class="zc-group zc-cache" aria-labelledby="zc-cache-title">
+    <html:h2 id="zc-cache-title">缓存与存储</html:h2>
+    <html:label class="zc-option"><html:span><html:strong>自动清理</html:strong><html:small>按周期检查，达到阈值后清理。</html:small></html:span><html:input id="zc-auto-cache" class="zc-switch" type="checkbox" role="switch" aria-describedby="zc-auto-cache-status"/></html:label>
+    <html:div class="zc-cache-policy">
+      <html:label>清理阈值<html:span class="zc-number-wrap"><html:input id="zc-cache-threshold" class="zc-path" type="number" min="0" max="102400" step="1" aria-label="清理阈值（MB）" aria-describedby="zc-cache-policy-hint"/><html:span aria-hidden="true">MB</html:span></html:span></html:label>
+      <html:label>检查周期<html:span class="zc-select-wrap"><html:select id="zc-cache-interval" class="zc-path"><html:option value="1">1 天</html:option><html:option value="7">7 天</html:option><html:option value="30">1 个月（30 天）</html:option></html:select></html:span></html:label>
+      <html:button id="zc-cache-policy" type="button">保存规则</html:button>
+    </html:div>
+    <html:p id="zc-cache-policy-hint" class="zc-hint">设为 0 则每次到期都清理，仅在 Zotero 运行时执行。</html:p>
+    <html:p id="zc-auto-cache-status" class="zc-hint" role="status" aria-live="polite"/>
+    <html:p id="zc-cache-summary" class="zc-cache-summary">尚未检查缓存</html:p>
+    <html:div class="zc-actions">
+      <html:button id="zc-cache-scan" type="button">检查缓存</html:button>
+      <html:button id="zc-cache-clear" type="button">清理缓存</html:button>
+      <html:span id="zc-cache-feedback" class="zc-inline-feedback" role="status" aria-live="polite"/>
+    </html:div>
+    <html:details class="zc-cache-details"><html:summary>清理范围</html:summary><html:p class="zc-hint">仅删除超过 24 小时的下载、解压和检测临时文件。保留运行组件、配置及备份，不影响论文、批注和笔记。组件操作期间自动延后；关闭自动清理后，已开始的清理会完成。</html:p></html:details>
+  </html:section>
   <html:section class="zc-group" aria-labelledby="zc-diagnostic-title">
     <html:h2 id="zc-diagnostic-title">连接诊断</html:h2>
     <html:p class="zc-muted">检查本机桥接与 Zotero API，不会调用 AI。</html:p>

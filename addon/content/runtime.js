@@ -1,13 +1,87 @@
 var ZoteroMCPRuntime = (() => {
   const Core = ZoteroMCPRuntimeCore;
   const pref = 'extensions.zotero-codex.';
-  let version, connection, root, key, task, disposed = false, cancelDownload;
+  let version, connection, root, key, task, connecting, maintenance, disposed = false, cancelDownload;
+  let cacheTimer, autoCacheError = '';
+  const cacheDay = 24 * 60 * 60 * 1000;
+  function cachePolicy() {
+    const mb = Zotero.Prefs.get(pref+'autoCacheThresholdMB',true);
+    const days = Zotero.Prefs.get(pref+'autoCacheIntervalDays',true);
+    return {autoCacheThresholdMB:Number.isInteger(mb) && mb >= 0 && mb <= 102400 ? mb : 100,
+      autoCacheIntervalDays:[1,7,30].includes(days) ? days : 1};
+  }
   const processes = new Set();
   let status = {phase:'idle', message:'正在检查运行组件…', ready:false, configured:false};
-  const state = () => ({...status, automatic:Zotero.Prefs.get(pref+'autoInstall',true) !== false, preferSystem:Zotero.Prefs.get(pref+'preferSystemNode',true) !== false});
+  const state = () => ({...status, busy:Boolean(task || connecting || maintenance), automatic:Zotero.Prefs.get(pref+'autoInstall',true) !== false, preferSystem:Zotero.Prefs.get(pref+'preferSystemNode',true) !== false,
+    autoCacheCleanup:Zotero.Prefs.get(pref+'autoCacheCleanup',true) === true,
+    ...cachePolicy(), lastAutoCacheCheck:Number(Zotero.Prefs.get(pref+'lastAutoCacheCheck',true)) || 0,
+    lastAutoCacheCleanup:Number(Zotero.Prefs.get(pref+'lastAutoCacheCleanup',true)) || 0, autoCacheError});
   const notify = patch => { status = {...status,...patch}; };
   const active = () => { if (disposed) throw new Error('安装已取消'); };
   const file = path => Zotero.File.pathToFile(path);
+  const cacheFS = {
+    async stat(path) {
+      active();
+      const entry = file(path);
+      if (!entry.exists()) return null;
+      if (entry.isSymlink()) return {type:'symlink'};
+      return {type:entry.isDirectory() ? 'directory' : entry.isFile() ? 'file' : 'other', size:entry.isFile() ? entry.fileSize : 0, mtime:entry.lastModifiedTime};
+    },
+    children:path=>IOUtils.getChildren(path),
+    basename:path=>PathUtils.filename(path),
+    async remove(path) { active(); file(path).remove(false); },
+  };
+  function cacheOperation(clean = false, thresholdMB = null) {
+    active();
+    if (task || connecting || maintenance) return Promise.reject(new Error('运行组件或缓存正在处理，请完成后重试'));
+    maintenance = (async()=>{
+      if (thresholdMB !== null) {
+        const report = await ZoteroMCPCache.inspect(cacheFS,root);
+        if (disposed || !state().autoCacheCleanup || report.bytes < thresholdMB * 1048576) return {belowThreshold:true,remaining:report};
+      }
+      return clean ? ZoteroMCPCache.clean(cacheFS,root) : ZoteroMCPCache.inspect(cacheFS,root);
+    })()
+      .then(report=>{
+        // Paths are internal to the cleaner, never accepted from settings.
+        const publicReport = value=>{ const {candidates,...rest}=value; return rest; };
+        return clean ? {...report,remaining:publicReport(report.remaining)} : publicReport(report);
+      }).finally(()=>{maintenance=null;});
+    return maintenance;
+  }
+  function scheduleCacheCleanup(delay = 60000) {
+    cacheTimer?.cancel(); cacheTimer = null;
+    if (disposed || !state().autoCacheCleanup) return;
+    cacheTimer = Components.classes['@mozilla.org/timer;1'].createInstance(Components.interfaces.nsITimer);
+    cacheTimer.initWithCallback(()=>{ cacheTimer = null; void automaticCacheCleanup(); },delay,Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+  }
+  async function automaticCacheCleanup() {
+    if (disposed || !state().autoCacheCleanup) return;
+    if (task || connecting || maintenance) { scheduleCacheCleanup(); return; }
+    const settings = state(), last = settings.lastAutoCacheCheck || settings.lastAutoCacheCleanup, now = Date.now();
+    if (last > 0 && now >= last && now - last < cacheDay * settings.autoCacheIntervalDays) { scheduleCacheCleanup(3600000); return; }
+    try {
+      const report = await cacheOperation(true,settings.autoCacheThresholdMB);
+      if (disposed) return;
+      autoCacheError = report.failed || report.remaining.skipped ? '部分缓存未能清理，可手动检查后重试。' : '';
+      // String storage avoids the 32-bit integer limit of Firefox preferences.
+      Zotero.Prefs.set(pref+'lastAutoCacheCheck',String(Date.now()),true);
+      if (!report.belowThreshold) Zotero.Prefs.set(pref+'lastAutoCacheCleanup',String(Date.now()),true);
+    } catch (error) { if (!disposed) autoCacheError = error.message || '自动清理失败，可手动重试。'; }
+    finally { scheduleCacheCleanup(3600000); }
+  }
+  function setAutoCacheCleanup(value) {
+    Zotero.Prefs.set(pref+'autoCacheCleanup',Boolean(value),true);
+    autoCacheError = '';
+    scheduleCacheCleanup(1000);
+  }
+  function setCachePolicy(thresholdMB, intervalDays) {
+    if (!Number.isInteger(thresholdMB) || thresholdMB < 0 || thresholdMB > 102400 || ![1,7,30].includes(intervalDays)) throw new Error('请输入 0–102400 的整数 MB，并选择有效周期');
+    if (maintenance) throw new Error('缓存正在处理，请完成后再修改');
+    Zotero.Prefs.set(pref+'autoCacheThresholdMB',thresholdMB,true);
+    Zotero.Prefs.set(pref+'autoCacheIntervalDays',intervalDays,true);
+    autoCacheError = '';
+    scheduleCacheCleanup(1000);
+  }
   const nodePath = directory => PathUtils.join(directory,key.startsWith('win32') ? 'node.exe' : 'node');
   function run(node, args, timeout = 60000) {
     active();
@@ -216,13 +290,19 @@ var ZoteroMCPRuntime = (() => {
     return installed.directory;
   }
   function ensure() {
+    if (maintenance) return Promise.reject(new Error('正在检查或清理缓存，请稍后重试'));
     if (!task) task = install().catch(error=>{
       if (!disposed) notify({phase:'error',message:error.message || '安装失败，请检查网络后重试。'});
       throw error;
     }).finally(()=>{task=null;});
     return task;
   }
-  async function connect() {
+  function connect() {
+    if (maintenance) return Promise.reject(new Error('正在检查或清理缓存，请稍后重试'));
+    if (!connecting) connecting = connectInternal().finally(()=>{connecting=null;});
+    return connecting;
+  }
+  async function connectInternal() {
     try {
       const directory = await ensure();
       const result = await configure(directory,'connect');
@@ -242,6 +322,7 @@ var ZoteroMCPRuntime = (() => {
     root=PathUtils.join(Services.dirsvc.get('ProfD',Components.interfaces.nsIFile).path,'zotero-codex-runtime');
     if(state().automatic) void ensure().catch(()=>{});
     else notify({phase:'idle',message:'自动准备已关闭，点击「准备组件」可安装运行组件。'});
+    scheduleCacheCleanup();
   }
   function setAutomatic(value) {
     Zotero.Prefs.set(pref+'autoInstall',Boolean(value),true);
@@ -249,12 +330,15 @@ var ZoteroMCPRuntime = (() => {
   }
   function setPreferSystem(value) {
     Zotero.Prefs.set(pref+'preferSystemNode',Boolean(value),true);
-    void (task || Promise.resolve()).catch(()=>{}).then(()=>ensure()).catch(()=>{});
+    void (maintenance || connecting || task || Promise.resolve()).catch(()=>{}).then(()=>ensure()).catch(()=>{});
   }
   async function stop() {
     disposed=true;cancelDownload?.();
+    cacheTimer?.cancel(); cacheTimer=null;
     for (const process of processes) { try { process.kill(); } catch {} }
     await task?.catch(()=>{});
+    await connecting?.catch(()=>{});
+    await maintenance?.catch(()=>{});
   }
-  return {start,stop,state,ensure,connect,setAutomatic,setPreferSystem};
+  return {start,stop,state,ensure,connect,setAutomatic,setPreferSystem,setAutoCacheCleanup,setCachePolicy,inspectCache:()=>cacheOperation(),clearCache:()=>cacheOperation(true)};
 })();

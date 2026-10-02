@@ -495,7 +495,7 @@ var ZoteroCodex = (() => {
   async function execute(name, args) {
     ZoteroMCPContract.validateCall(name, args);
     switch (name) {
-      case 'zotero_status': return { version: '0.8.2', zoteroVersion: Zotero.version, betterNotes: Boolean(Zotero.BetterNotes?.api), connected: running };
+      case 'zotero_status': return { version: '0.8.3', zoteroVersion: Zotero.version, betterNotes: Boolean(Zotero.BetterNotes?.api), connected: running };
       case 'zotero_get_context': return context();
       case 'zotero_resolve_item': {
         const libraryID = args.groupId ? Zotero.Groups.getLibraryIDFromGroupID(args.groupId) : Zotero.Libraries.userLibraryID;
@@ -567,7 +567,7 @@ var ZoteroCodex = (() => {
     const make = (tag, text) => { const n = doc.createElementNS('http://www.w3.org/1999/xhtml', tag); n.textContent = text; return n; };
     const panel = make('div', ''); panel.className = 'zc-mcp';
     panel.style.cssText = 'padding:12px;display:grid;gap:10px;font:inherit;line-height:1.6';
-    panel.append(make('strong', 'MCP 已就绪 · 0.8.2'), make('div', '在 Codex 中直接提问。可在设置中管理文字选区和区域截图的自动捕获。'));
+    panel.append(make('strong', 'MCP 已就绪 · 0.8.3'), make('div', '在 Codex 中直接提问。可在设置中管理文字选区和区域截图的自动捕获。'));
     const settingsButton = make('button', '打开 MCP 设置');
     settingsButton.addEventListener('click', () => Zotero.Utilities.Internal.openPreferences(SETTINGS_ID));
     panel.append(settingsButton);
@@ -619,7 +619,7 @@ var ZoteroCodex = (() => {
     // Create privately before writing any secret; never log the token.
     await IOUtils.writeUTF8(connectionPath, '{}', { mode: 'overwrite', permissions: 0o600 });
     await IOUtils.setPermissions(connectionPath, 0o600);
-    await IOUtils.writeUTF8(connectionPath, JSON.stringify({ url: `http://127.0.0.1:${Zotero.Server.port}${ENDPOINT}`, token, version: '0.8.2' }));
+    await IOUtils.writeUTF8(connectionPath, JSON.stringify({ url: `http://127.0.0.1:${Zotero.Server.port}${ENDPOINT}`, token, version: '0.8.3' }));
     for (const win of Zotero.getMainWindows()) prepareWindow(win);
     paneID = Zotero.ItemPaneManager.registerSection({ paneID: 'zotero-codex-mcp', pluginID: ID,
       header: { l10nID: 'zotero-codex-title', icon: 'chrome://zotero-codex/content/icon.svg', darkIcon: 'chrome://zotero-codex/content/icon-dark.svg' },
@@ -641,7 +641,7 @@ var ZoteroCodex = (() => {
     Zotero.Reader.registerEventListener('renderTextSelectionPopup', listener, ID);
     running = true;
     annotationObserverID = Zotero.Notifier.registerObserver({notify:onAnnotationChange}, ['item'], 'zotero-codex-regions');
-    Zotero.ZoteroCodex = { version: '0.8.2', dispatch, capture, annotationCard,
+    Zotero.ZoteroCodex = { version: '0.8.3', dispatch, capture, annotationCard,
       settings: {state:settingsState, setCapturePreference, clearContext, connectionConfig, revealConnection, diagnose, runtime:ZoteroMCPRuntime} };
     preferencePaneID = await Zotero.PreferencePanes.register({
       pluginID:ID, id:SETTINGS_ID, label:'Zotero MCP',

@@ -1,6 +1,6 @@
 // Packaged only into an isolated test profile by prepare-host-smoke.py.
 (async () => {
-  const result = {version:'0.8.2', stage:'preferences', checks:[]};
+  const result = {version:'0.8.3', stage:'preferences', checks:[]};
   const check = (name, pass) => { result.checks.push({name,pass:Boolean(pass)}); if (!pass) throw new Error(name); };
   const waitFor = async fn => { for (let i=0;i<150;i++) { if (await fn()) return; await Zotero.Promise.delay(100); } throw new Error('wait timed out'); };
   try {
@@ -10,7 +10,7 @@
     const id = 'zotero-codex-preferences';
     check('registered-native-preference-pane', Zotero.PreferencePanes.pluginPanes.some(p=>p.id===id && p.rawLabel==='Zotero MCP'));
     const win = Zotero.Utilities.Internal.openPreferences(id);
-    await waitFor(()=>win.document.getElementById('zc-version')?.textContent.includes('0.8.2'));
+    await waitFor(()=>win.document.getElementById('zc-version')?.textContent.includes('0.8.3'));
     const el = suffix=>win.document.getElementById('zc-'+suffix);
     const ui = win.Zotero_Preferences.getScope(id).ZoteroMCPPreferences;
     check('pane-loads-with-status-and-defaults', el('bridge').textContent==='已就绪' && el('auto-text').checked && el('auto-region').checked);
@@ -53,7 +53,62 @@
       settings.runtime.connect=originalConnect;settings.runtime.ensure=originalEnsure;settings.runtime.state=runtimeState;
       ui.refreshRuntime();
     }
+    // Real file-system cleanup in the isolated profile, never the daily profile.
+    const cacheRoot=PathUtils.join(base,'profile','zotero-codex-runtime');
+    const emptyCache=await settings.runtime.inspectCache();
+    check('missing-cache-directory-is-empty',emptyCache.count===0);
+    await IOUtils.makeDirectory(cacheRoot);
+    const nonce='12345678-1234-1234-1234-123456789abc';
+    const stale=PathUtils.join(cacheRoot,`.download-${nonce}.zip`);
+    const recent=PathUtils.join(cacheRoot,`probe-${nonce}.json`);
+    const stage=PathUtils.join(cacheRoot,`.install-${nonce}`);
+    const keptRuntime=PathUtils.join(cacheRoot,'0.7.0-darwin-arm64');
+    const agePath=path=>{const f=Zotero.File.pathToFile(path);f.lastModifiedTime=Date.now()-48*3600000;};
+    await IOUtils.writeUTF8(stale,'cache');agePath(stale);
+    await IOUtils.writeUTF8(recent,'active');
+    await IOUtils.makeDirectory(stage);
+    const stagedFile=PathUtils.join(stage,'partial');
+    await IOUtils.writeUTF8(stagedFile,'part');agePath(stagedFile);agePath(stage);
+    await IOUtils.makeDirectory(keptRuntime);
+    const keptNode=PathUtils.join(keptRuntime,'node');
+    await IOUtils.writeUTF8(keptNode,'fallback');agePath(keptNode);agePath(keptRuntime);
+    const connectionBefore=await IOUtils.readUTF8(PathUtils.join(base,'connection.json'));
+    el('cache-scan').click();
+    check('cache-scan-locks-runtime-and-cleanup-actions',el('cache-clear').disabled&&el('install').disabled&&el('prefer-system').disabled);
+    await waitFor(()=>!ui.pendingActions.has('cache-scan'));
+    check('cache-scan-shows-disposable-and-retained-bytes',el('cache-summary').textContent.includes('可清理 9 B（2 项）')&&el('cache-summary').textContent.includes('组件 8 B'));
+    el('cache-clear').click();
+    check('cache-cleanup-blocks-overlap',el('cache-clear').disabled&&el('cache-scan').disabled&&el('install').disabled);
+    await waitFor(()=>!ui.pendingActions.has('cache-clear'));
+    check('cache-cleanup-removes-old-file-and-staging-directory',!(await IOUtils.exists(stale))&&!(await IOUtils.exists(stage)));
+    check('cache-cleanup-preserves-recent-file-fallback-node-and-connection',await IOUtils.exists(recent)&&await IOUtils.exists(keptNode)&&(await IOUtils.readUTF8(PathUtils.join(base,'connection.json')))===connectionBefore);
+    check('cache-cleanup-reports-actual-space-and-unlocks-actions',el('cache-feedback').textContent==='已清理 2 项，释放 9 B'&&!el('cache-clear').disabled&&!el('install').disabled);
+    el('cache-clear').click();await waitFor(()=>!ui.pendingActions.has('cache-clear'));
+    check('repeat-cache-cleanup-is-safe',el('cache-feedback').textContent==='已清理 0 项，释放 0 B');
     const toggle = (suffix, value) => { el(suffix).checked=value; el(suffix).dispatchEvent(new win.Event('change',{bubbles:true})); };
+    check('automatic-cache-cleanup-defaults-off',!el('auto-cache').checked&&!settings.runtime.state().autoCacheCleanup);
+    check('cache-policy-defaults',el('cache-threshold').value==='100'&&el('cache-interval').value==='1');
+    el('cache-threshold').value='0';el('cache-interval').value='7';
+    el('cache-threshold').dispatchEvent(new win.Event('input',{bubbles:true}));
+    ui.refreshRuntime();
+    check('refresh-preserves-unsaved-cache-policy',el('cache-threshold').value==='0'&&el('cache-interval').value==='7');
+    el('cache-policy').click();await waitFor(()=>!ui.pendingActions.has('cache-policy'));
+    check('cache-policy-saves-size-and-cycle',settings.runtime.state().autoCacheThresholdMB===0&&settings.runtime.state().autoCacheIntervalDays===7);
+    el('cache-threshold').value='-1';el('cache-threshold').dispatchEvent(new win.Event('input',{bubbles:true}));
+    el('cache-policy').click();await waitFor(()=>!ui.pendingActions.has('cache-policy'));
+    check('invalid-cache-policy-keeps-saved-rule',settings.runtime.state().autoCacheThresholdMB===0&&el('cache-feedback').textContent.includes('整数'));
+    el('cache-threshold').value='0';el('cache-interval').value='30';
+    el('cache-policy').click();await waitFor(()=>!ui.pendingActions.has('cache-policy'));
+    check('cache-policy-month-option-persists',settings.runtime.state().autoCacheIntervalDays===30);
+    await IOUtils.writeUTF8(stale,'auto');agePath(stale);
+    toggle('auto-cache',true);
+    check('automatic-cache-setting-persists',Zotero.Prefs.get('extensions.zotero-codex.autoCacheCleanup',true)===true);
+    await waitFor(()=>settings.runtime.state().lastAutoCacheCleanup>0&&!settings.runtime.state().busy);
+    ui.refreshRuntime();
+    check('automatic-cache-timer-cleans-real-files',!(await IOUtils.exists(stale))&&await IOUtils.exists(recent)&&await IOUtils.exists(keptNode));
+    check('automatic-cache-shows-last-run',el('auto-cache-status').textContent.includes('最近自动清理'));
+    toggle('auto-cache',false);
+    check('automatic-cache-can-be-disabled',!settings.runtime.state().autoCacheCleanup&&el('auto-cache-status').textContent==='');
     toggle('auto-text',false);toggle('auto-region',false);
     check('ui-toggles-write-persistent-preferences', !settings.state().autoText && !settings.state().autoRegion && Zotero.Prefs.get('extensions.zotero-codex.autoRegion',true)===false);
     const paper = new Zotero.Item('journalArticle');paper.setField('title','Settings fixture');await paper.saveTx();
@@ -82,10 +137,10 @@
     check('disabled-api-reported-separately', disabledReport.bridge.ok && disabledReport.nativeAPI.status===403 && el('native').textContent.includes('未开启'));
     Zotero.Prefs.set('httpServer.localAPI.enabled',true);
     const config = JSON.parse(await IOUtils.readUTF8(PathUtils.join(base,'connection.json')));
-    await Zotero.HTTP.request('POST',config.url,{headers:{'Zotero-Allowed-Request':'true','Content-Type':'application/json',Authorization:'Bearer '+config.token},body:JSON.stringify({name:'zotero_status',arguments:{},client:{version:'0.8.2',nodePath:'node',serverPath:PathUtils.join(base,'fixture-server.mjs')}})});
+    await Zotero.HTTP.request('POST',config.url,{headers:{'Zotero-Allowed-Request':'true','Content-Type':'application/json',Authorization:'Bearer '+config.token},body:JSON.stringify({name:'zotero_status',arguments:{},client:{version:'0.8.3',nodePath:'node',serverPath:PathUtils.join(base,'fixture-server.mjs')}})});
     await IOUtils.writeUTF8(PathUtils.join(base,'fixture-server.mjs'),'// Synthetic service path for configuration copy test');
     ui.refresh();
-    check('authenticated-client-runtime-detected', settings.state().lastRequestAt && el('server-path').value.endsWith('fixture-server.mjs') && el('server-version').textContent==='0.8.2');
+    check('authenticated-client-runtime-detected', settings.state().lastRequestAt && el('server-path').value.endsWith('fixture-server.mjs') && el('server-version').textContent==='0.8.3');
     // Test the clipboard action without changing the real user's clipboard.
     const copy = Zotero.Utilities.Internal.copyTextToClipboard;
     let copied;
@@ -114,16 +169,30 @@
     await Zotero.Promise.delay(300);
     const rect=el('settings').getBoundingClientRect();
     result.layout={width:rect.width,height:rect.height,scrollWidth:el('settings').scrollWidth,windowWidth:win.innerWidth,windowHeight:win.innerHeight};
-    // Render both parts of the isolated preferences pane for visual verification.
+    const cacheControls=['cache-threshold','cache-interval','cache-policy'].map(id=>el(id).getBoundingClientRect());
+    result.cacheControls=cacheControls.map(r=>({height:r.height,bottom:r.bottom}));
+    check('cache-controls-have-equal-height-and-baseline',cacheControls.every(r=>Math.abs(r.height-36)<1&&Math.abs(r.bottom-cacheControls[0].bottom)<1));
+    check('cache-number-left-aligned-without-spinner',win.getComputedStyle(el('cache-threshold')).textAlign==='left'&&win.getComputedStyle(el('cache-threshold')).appearance==='textfield');
+    check('cache-range-description-collapsed',!el('cache-title').parentElement.querySelector('details').open);
+    // Render normal, dark, enabled and narrow cache states.
+
     try {
-      for (const [name,target] of [['preferences',null],['preferences-reading','reading-title'],['preferences-bottom','client-title'],['preferences-developer','advanced'],['preferences-narrow',null]]) {
+      for (const [name,target] of [['preferences',null],['preferences-reading','reading-title'],['preferences-bottom','client-title'],['preferences-cache','cache-title'],['preferences-cache-dark','cache-title'],['preferences-cache-enabled','cache-title'],['preferences-cache-narrow','cache-title'],['preferences-developer','advanced'],['preferences-narrow',null]]) {
+        if(name==='preferences-cache') el('settings').style.colorScheme='light';
+        if(name==='preferences-cache-dark') el('settings').style.colorScheme='dark';
+        if(name==='preferences-cache-enabled') { toggle('auto-cache',true);ui.refreshRuntime(); }
+        if(name==='preferences-cache-narrow') {
+          el('settings').style.width='360px';
+          check('narrow-cache-controls-do-not-overflow',el('settings').scrollWidth<=362);
+        }
+        if(name==='preferences-developer') {el('settings').style.width='';el('settings').style.colorScheme='light';toggle('auto-cache',false);}
         if(name==='preferences-developer'){el('advanced').open=true;el('connection-details').open=true;toggle('developer-mode',true);}
         if(name==='preferences-narrow'){
           el('settings').style.width='360px';
           ui.feedback('较长的状态提示应该在刷新按钮右边自动换行，不会超出设置页。');
           check('narrow-layout-does-not-overflow', el('settings').scrollWidth<=362);
         }
-        if(target) el(target).scrollIntoView({block:'start'});
+        if(target) (target==='cache-title' ? el(target).parentElement : el(target)).scrollIntoView({block:'start'});
         else win.Zotero_Preferences.content.scrollTop=0;
         await Zotero.Promise.delay(100);
         const bitmap=await win.browsingContext.currentWindowGlobal.drawSnapshot(new win.DOMRect(0,0,win.innerWidth,win.innerHeight),1,'white');

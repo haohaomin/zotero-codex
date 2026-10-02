@@ -53,7 +53,23 @@
 #zc-settings button:active { background: light-dark(#ebebef, #414147); }
 #zc-settings button:disabled { opacity: 0.55; cursor: default; }
 #zc-settings .zc-primary { background: var(--zc-subtle); border-color: light-dark(#bbbcc3, #72727c); font-weight: 600; }
-#zc-settings :is(button, input, summary):focus-visible { outline: 2px solid var(--zc-secondary); outline-offset: 3px; }
+#zc-settings :is(button, input, select, summary):focus-visible { outline: 2px solid var(--zc-secondary); outline-offset: 3px; }
+#zc-settings .zc-cache-policy { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: 12px; margin-top: 4px; }
+#zc-settings .zc-cache-policy label { min-width: 0; margin: 0; padding: 0; font-size: 0.94em; line-height: 1.5; }
+#zc-settings .zc-cache-policy :is(.zc-path, button) { height: 36px; min-height: 36px; margin: 0; line-height: normal; }
+#zc-settings .zc-number-wrap, #zc-settings .zc-select-wrap { display: block; position: relative; margin-top: 6px; }
+#zc-settings #zc-cache-threshold { appearance: textfield; -moz-appearance: textfield; text-align: left; padding: 7px 42px 7px 10px; }
+#zc-settings .zc-number-wrap > span { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--zc-secondary); pointer-events: none; font-size: 0.9em; }
+#zc-settings #zc-cache-interval { appearance: none; padding: 7px 30px 7px 10px; }
+#zc-settings .zc-select-wrap::after { content: ''; position: absolute; right: 13px; top: 14px; width: 6px; height: 6px; border-right: 1.5px solid var(--zc-secondary); border-bottom: 1.5px solid var(--zc-secondary); transform: rotate(45deg); pointer-events: none; }
+#zc-settings .zc-cache input.zc-switch { appearance: none; width: 34px; height: 20px; border: 1px solid var(--zc-border); border-radius: 12px; background: light-dark(#dcdce1, #55555f); position: relative; cursor: pointer; }
+#zc-settings .zc-cache input.zc-switch::before { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px #0003; }
+#zc-settings .zc-cache input.zc-switch:checked { background: light-dark(#526b60, #779888); border-color: transparent; }
+#zc-settings .zc-cache input.zc-switch:checked::before { transform: translateX(14px); }
+#zc-settings .zc-cache-summary { border-top: 1px solid var(--zc-border); padding-top: 14px; margin-top: 16px; line-height: 1.6; font-size: 0.94em; }
+#zc-settings .zc-cache-details { margin-top: 12px; color: var(--zc-secondary); font-size: 0.94em; }
+#zc-settings .zc-cache-details summary { font-weight: normal; }
+#zc-settings #zc-auto-cache-status:empty { display: none; }
 #zc-settings .zc-inline-feedback { flex: 1 1 160px; min-width: 0; color: var(--zc-secondary); line-height: 1.5; font-size: 0.9em; overflow-wrap: anywhere; }
 #zc-settings .zc-inline-feedback:empty { display: none; }
 #zc-settings .zc-disclosure { border-top: 1px solid var(--zc-border); margin-top: 16px; padding-top: 12px; }
@@ -85,6 +101,8 @@
 #zc-settings .zc-footer button { border-color: transparent; background: transparent; }
 #zc-settings .zc-footer button:hover { background: var(--zc-subtle); }
 @container (max-width: 420px) {
+  #zc-settings .zc-cache-policy { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  #zc-settings .zc-cache-policy button { grid-column: 1 / -1; justify-self: start; }
   #zc-settings .zc-group { padding: 16px; }
   #zc-settings .zc-service-grid { grid-template-columns: 1fr; gap: 8px; }
   #zc-settings .zc-service-grid > div { flex-direction: row; justify-content: space-between; gap: 12px; }

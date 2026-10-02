@@ -1,0 +1,277 @@
+{
+  "version": "0.8.3",
+  "stage": "preferences",
+  "checks": [
+    {
+      "name": "registered-native-preference-pane",
+      "pass": true
+    },
+    {
+      "name": "pane-loads-with-status-and-defaults",
+      "pass": true
+    },
+    {
+      "name": "advanced-paths-hidden-until-requested",
+      "pass": true
+    },
+    {
+      "name": "advanced-section-collapsed-by-default",
+      "pass": true
+    },
+    {
+      "name": "idle-runtime-is-not-shown-as-checking",
+      "pass": true
+    },
+    {
+      "name": "prepare-precedes-connect",
+      "pass": true
+    },
+    {
+      "name": "idle-prompts-preparation-and-blocks-connection",
+      "pass": true
+    },
+    {
+      "name": "runtime-badge-downloading-false",
+      "pass": true
+    },
+    {
+      "name": "runtime-actions-downloading-false",
+      "pass": true
+    },
+    {
+      "name": "runtime-badge-ready-false",
+      "pass": true
+    },
+    {
+      "name": "runtime-actions-ready-false",
+      "pass": true
+    },
+    {
+      "name": "runtime-badge-ready-true",
+      "pass": true
+    },
+    {
+      "name": "runtime-actions-ready-true",
+      "pass": true
+    },
+    {
+      "name": "runtime-badge-error-false",
+      "pass": true
+    },
+    {
+      "name": "runtime-actions-error-false",
+      "pass": true
+    },
+    {
+      "name": "refresh-keeps-both-actions-locked-during-connect",
+      "pass": true
+    },
+    {
+      "name": "connect-completion-restores-actions",
+      "pass": true
+    },
+    {
+      "name": "failed-preparation-finally-keeps-connect-disabled",
+      "pass": true
+    },
+    {
+      "name": "missing-cache-directory-is-empty",
+      "pass": true
+    },
+    {
+      "name": "cache-scan-locks-runtime-and-cleanup-actions",
+      "pass": true
+    },
+    {
+      "name": "cache-scan-shows-disposable-and-retained-bytes",
+      "pass": true
+    },
+    {
+      "name": "cache-cleanup-blocks-overlap",
+      "pass": true
+    },
+    {
+      "name": "cache-cleanup-removes-old-file-and-staging-directory",
+      "pass": true
+    },
+    {
+      "name": "cache-cleanup-preserves-recent-file-fallback-node-and-connection",
+      "pass": true
+    },
+    {
+      "name": "cache-cleanup-reports-actual-space-and-unlocks-actions",
+      "pass": true
+    },
+    {
+      "name": "repeat-cache-cleanup-is-safe",
+      "pass": true
+    },
+    {
+      "name": "automatic-cache-cleanup-defaults-off",
+      "pass": true
+    },
+    {
+      "name": "cache-policy-defaults",
+      "pass": true
+    },
+    {
+      "name": "refresh-preserves-unsaved-cache-policy",
+      "pass": true
+    },
+    {
+      "name": "cache-policy-saves-size-and-cycle",
+      "pass": true
+    },
+    {
+      "name": "invalid-cache-policy-keeps-saved-rule",
+      "pass": true
+    },
+    {
+      "name": "cache-policy-month-option-persists",
+      "pass": true
+    },
+    {
+      "name": "automatic-cache-setting-persists",
+      "pass": true
+    },
+    {
+      "name": "automatic-cache-timer-cleans-real-files",
+      "pass": true
+    },
+    {
+      "name": "automatic-cache-shows-last-run",
+      "pass": true
+    },
+    {
+      "name": "automatic-cache-can-be-disabled",
+      "pass": true
+    },
+    {
+      "name": "ui-toggles-write-persistent-preferences",
+      "pass": true
+    },
+    {
+      "name": "disabled-text-capture-keeps-manual-button",
+      "pass": true
+    },
+    {
+      "name": "manual-text-capture-works-when-auto-disabled",
+      "pass": true
+    },
+    {
+      "name": "clear-context-button",
+      "pass": true
+    },
+    {
+      "name": "disabling-clears-existing-auto-text",
+      "pass": true
+    },
+    {
+      "name": "real-loopback-diagnostics-pass",
+      "pass": true
+    },
+    {
+      "name": "diagnostics-do-not-claim-client-connected",
+      "pass": true
+    },
+    {
+      "name": "disabled-api-reported-separately",
+      "pass": true
+    },
+    {
+      "name": "authenticated-client-runtime-detected",
+      "pass": true
+    },
+    {
+      "name": "copy-config-button-with-real-paths",
+      "pass": true
+    },
+    {
+      "name": "developer-mode-explains-export-only",
+      "pass": true
+    },
+    {
+      "name": "custom-export-does-not-change-automatic-paths",
+      "pass": true
+    },
+    {
+      "name": "invalid-custom-path-reports-error-next-to-export",
+      "pass": true
+    },
+    {
+      "name": "disabling-developer-mode-restores-automatic-export",
+      "pass": true
+    },
+    {
+      "name": "copy-diagnostics-is-redacted",
+      "pass": true
+    },
+    {
+      "name": "cache-controls-have-equal-height-and-baseline",
+      "pass": true
+    },
+    {
+      "name": "cache-number-left-aligned-without-spinner",
+      "pass": true
+    },
+    {
+      "name": "cache-range-description-collapsed",
+      "pass": true
+    },
+    {
+      "name": "narrow-cache-controls-do-not-overflow",
+      "pass": true
+    },
+    {
+      "name": "narrow-layout-does-not-overflow",
+      "pass": true
+    },
+    {
+      "name": "native-pane-visible-without-horizontal-overflow",
+      "pass": true
+    }
+  ],
+  "diagnostics": {
+    "checkedAt": "2026-10-02T18:40:18.625Z",
+    "version": "0.8.3",
+    "zoteroVersion": "10.0.5",
+    "bridge": {
+      "ok": true,
+      "status": 200
+    },
+    "nativeAPI": {
+      "ok": true,
+      "status": 200
+    },
+    "connectionFilePresent": true,
+    "nativeAPIEnabled": true,
+    "betterNotes": true,
+    "lastRequestAt": null,
+    "serverVersion": null,
+    "autoText": true,
+    "autoRegion": true,
+    "snapshotCount": 0
+  },
+  "layout": {
+    "width": 578,
+    "height": 1737.7166748046875,
+    "scrollWidth": 578,
+    "windowWidth": 800,
+    "windowHeight": 600
+  },
+  "cacheControls": [
+    {
+      "height": 36,
+      "bottom": 1360.449951171875
+    },
+    {
+      "height": 36,
+      "bottom": 1360.449951171875
+    },
+    {
+      "height": 36,
+      "bottom": 1360.449951171875
+    }
+  ],
+  "screenshot": true
+}

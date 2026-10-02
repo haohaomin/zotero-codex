@@ -13,10 +13,11 @@ var ZoteroMCPPreferences = {
       if (button.disabled || this.pendingActions.has(id)) return;
       this.pendingActions.add(id);
       button.disabled = true;
-      const runtimeAction = id === 'install' || id === 'connect';
+      const runtimeAction = id === 'install' || id === 'connect' || id.startsWith('cache-');
       if (runtimeAction) this.refreshRuntime();
       try { await action(); } catch (error) {
         if (id === 'copy-config') this.el('config-feedback').textContent = error.message;
+        else if (id.startsWith('cache-')) this.el('cache-feedback').textContent = error.message;
         else this.feedback(error.message);
       }
       finally {
@@ -49,6 +50,21 @@ var ZoteroMCPPreferences = {
     this.el('auto-install').addEventListener('change', () => {
       this.api.runtime.setAutomatic(this.el('auto-install').checked); this.refresh();
     });
+    this.el('auto-cache').addEventListener('change', () => {
+      try {
+        this.api.runtime.setAutoCacheCleanup(this.el('auto-cache').checked);
+        this.refreshRuntime();
+      } catch (error) { this.el('cache-feedback').textContent = error.message; }
+    });
+    for (const id of ['cache-threshold','cache-interval']) this.el(id).addEventListener('input',()=>{this.cachePolicyDirty=true;});
+    this.bind('cache-policy', () => {
+      const field = this.el('cache-threshold');
+      if (field.value.trim() === '' || !field.checkValidity()) throw new Error('请输入 0–102400 的整数 MB');
+      this.api.runtime.setCachePolicy(Number(field.value),Number(this.el('cache-interval').value));
+      this.cachePolicyDirty=false;
+      this.el('cache-feedback').textContent='规则已保存';
+      this.refreshRuntime();
+    });
     this.bind('install', async () => { await this.api.runtime.ensure(); this.refresh(true); });
     this.bind('connect', async () => {
       await this.api.runtime.connect(); this.refresh(true); this.feedback('配置已保存，请重启 Codex');
@@ -56,6 +72,17 @@ var ZoteroMCPPreferences = {
     this.runtimeTimer = window.setInterval(() => this.refreshRuntime(), 500);
     window.addEventListener('unload', () => window.clearInterval(this.runtimeTimer), {once:true});
     this.bind('refresh', () => { this.refresh(); this.feedback('状态已刷新'); });
+    this.bind('cache-scan', async () => {
+      this.el('cache-feedback').textContent = '正在检查…';
+      this.showCache(await this.api.runtime.inspectCache());
+      this.el('cache-feedback').textContent = '检查完成';
+    });
+    this.bind('cache-clear', async () => {
+      this.el('cache-feedback').textContent = '正在清理…';
+      const report = await this.api.runtime.clearCache();
+      this.showCache(report.remaining);
+      this.el('cache-feedback').textContent = `已清理 ${report.removed} 项，释放 ${this.size(report.freedBytes)}` + (report.failed ? `；${report.failed} 项未完整清理，可稍后重试` : '');
+    });
     this.bind('clear', () => { this.api.clearContext(); this.refresh(); this.feedback('已清除所有阅读器的 MCP 选区快照'); });
     this.bind('copy-config', async () => {
       const custom = this.el('developer-mode').checked;
@@ -83,10 +110,24 @@ var ZoteroMCPPreferences = {
       if (this.el('runtime-status').textContent !== state.message) this.el('runtime-status').textContent = state.message;
       this.el('auto-install').checked = state.automatic;
       this.el('prefer-system').checked = state.preferSystem;
+      this.el('auto-cache').checked = state.autoCacheCleanup;
+      if (!this.cachePolicyDirty && !['zc-cache-threshold','zc-cache-interval'].includes(document.activeElement?.id)) {
+        this.el('cache-threshold').value = state.autoCacheThresholdMB;
+        this.el('cache-interval').value = state.autoCacheIntervalDays;
+      }
+      const shortTime = value=>new Date(value).toLocaleString(undefined,{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      const justCleaned = state.lastAutoCacheCleanup && Math.abs(state.lastAutoCacheCheck-state.lastAutoCacheCleanup)<1000;
+      const cacheStatus = !state.autoCacheCleanup ? '' : state.autoCacheError || (justCleaned ? `最近自动清理：${shortTime(state.lastAutoCacheCleanup)}` :
+        (state.lastAutoCacheCheck ? `最近检查：${shortTime(state.lastAutoCacheCheck)}` : '等待首次检查') +
+        (state.lastAutoCacheCleanup ? ` · 最近自动清理：${shortTime(state.lastAutoCacheCleanup)}` : ''));
+      if (this.el('auto-cache-status').textContent !== cacheStatus) this.el('auto-cache-status').textContent = cacheStatus;
       const busy = ['checking','downloading','verifying','installing'].includes(state.phase);
       const preparing = this.pendingActions.has('install');
       const connecting = this.pendingActions.has('connect');
-      const unavailable = busy || preparing || connecting;
+      const unavailable = busy || state.busy || preparing || connecting || this.pendingActions.has('cache-scan') || this.pendingActions.has('cache-clear');
+      for (const id of ['cache-scan','cache-clear','cache-policy','cache-threshold','cache-interval']) this.el(id).disabled = Boolean(unavailable);
+      this.el('auto-install').disabled = Boolean(unavailable);
+      this.el('prefer-system').disabled = Boolean(unavailable);
       const ready = state.ready && state.phase !== 'error';
       const install = this.el('install'), connect = this.el('connect');
       install.textContent = connecting ? '重新检查组件' : busy || preparing ? '准备中…' : state.phase === 'error' ? '重试' : ready ? '重新检查组件' : '准备组件';
@@ -106,6 +147,16 @@ var ZoteroMCPPreferences = {
       this.el('node-detail').textContent = paths.nodePath || '尚未确定';
       this.el('server-detail').textContent = paths.serverPath || '尚未准备，请先准备运行组件';
     } catch { /* Pane can outlive a disabled plugin. */ }
+  },
+  size(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1048576) return `${(bytes/1024).toFixed(1)} KB`;
+    return `${(bytes/1048576).toFixed(1)} MB`;
+  },
+  showCache(report) {
+    this.el('cache-summary').textContent = `可清理 ${this.size(report.bytes)}（${report.count} 项） · 运行组件 ${this.size(report.retainedBytes)}（保留）` +
+      (report.recentCount ? ` · 近期文件 ${report.recentCount} 项暂保留` : '') +
+      (report.skipped ? ` · ${report.skipped} 项未能检查` : '');
   },
   refresh(fillPaths = false) {
     if (!this.initialized) return;

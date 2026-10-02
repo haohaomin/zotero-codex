@@ -1,7 +1,7 @@
 // This harness and the intentionally failing service ZIP exist only in an
 // isolated profile. No production download endpoint or system binary is changed.
 (async()=>{
-  const result={version:'0.8.2',checks:[]};
+  const result={version:'0.8.3',checks:[]};
   const check=(name,pass)=>{result.checks.push({name,pass:Boolean(pass)});if(!pass)throw new Error(name);};
   const request=Zotero.HTTP.request,download=Zotero.HTTP.download;
   const downloads=[];let rejectSystem=false;
@@ -17,7 +17,7 @@
     const rejected=JSON.parse(await IOUtils.readUTF8(PathUtils.join(base,'rejected-manifest.json')));
     const key=Object.keys(manifest.assets)[0];
     Zotero.HTTP.request=async function(method,url,options){
-      if(url.endsWith('/v0.8.2/runtime-manifest.json'))return {status:200,response:rejectSystem?rejected:manifest};
+      if(url.endsWith('/v0.8.3/runtime-manifest.json'))return {status:200,response:rejectSystem?rejected:manifest};
       return request.call(this,method,url,options);
     };
     Zotero.HTTP.download=async function(url,path,options){

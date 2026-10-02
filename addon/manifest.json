@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Zotero Codex MCP",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "让 Codex 读取 Zotero 论文、选区并协作 Better Notes",
   "author": "Zotero Codex project",
   "applications": {
